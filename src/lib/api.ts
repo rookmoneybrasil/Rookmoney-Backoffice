@@ -1,80 +1,59 @@
-/**
- * API client para Rookmoney-Backoffice
- * Todas as chamadas vão para Rookmoney-API
- */
+const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000'
-
-async function request<T>(
-  path: string,
-  options: RequestInit = {},
-): Promise<T> {
-  const res = await fetch(`${API_URL}/api/v1${path}`, {
-    ...options,
+async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
+  const res = await fetch(`${API}/api/v1${path}`, {
+    ...opts,
     credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
+    headers: { 'Content-Type': 'application/json', ...opts.headers },
   })
-
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: 'Erro desconhecido' }))
+    const err = await res.json().catch(() => ({})) as { error?: string }
     throw new Error(err.error ?? `HTTP ${res.status}`)
   }
-
-  const json = await res.json()
-  return json.data as T
+  const json = await res.json() as { data: T }
+  return json.data
 }
 
 export const api = {
-  // Admin Stats
-  stats:   () => request<AdminStats>('/admin/stats'),
+  // Auth
+  login:  (secret: string) => req<{ token: string }>('/admin/auth', { method: 'POST', body: JSON.stringify({ secret }) }),
+  logout: () => req<void>('/admin/auth/logout', { method: 'POST' }),
 
-  // Admin Users
-  users:   (params?: Record<string, string>) => {
-    const qs = params ? '?' + new URLSearchParams(params).toString() : ''
-    return request<UserListResponse>(`/admin/users${qs}`)
+  // Stats
+  stats: () => req<AdminStats>('/admin/stats'),
+
+  // Users
+  users: (p?: Record<string, string>) => {
+    const qs = p ? '?' + new URLSearchParams(p).toString() : ''
+    return req<UsersPage>(`/admin/users${qs}`)
   },
-  user:    (id: string) => request<AdminUser>(`/admin/users/${id}`),
-  setPlan: (id: string, plan: 'FREE' | 'PRO') =>
-    request(`/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify({ plan }) }),
-  setAdmin: (id: string, isAdmin: boolean) =>
-    request(`/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify({ isAdmin }) }),
-  deleteUser: (id: string) =>
-    request(`/admin/users/${id}`, { method: 'DELETE' }),
+  user:       (id: string) => req<UserDetail>(`/admin/users/${id}`),
+  setPlan:    (id: string, plan: 'FREE' | 'PRO') => req(`/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify({ plan }) }),
+  setAdmin:   (id: string, isAdmin: boolean)     => req(`/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify({ isAdmin }) }),
+  deleteUser: (id: string)                        => req(`/admin/users/${id}`, { method: 'DELETE' }),
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface AdminStats {
-  totalUsers:        number
-  proUsers:          number
-  freeUsers:         number
-  proRate:           number
-  newThisMonth:      number
-  totalTransactions: number
-  mrr:               number
-  arr:               number
+  totalUsers: number; proUsers: number; freeUsers: number; proRate: number
+  newToday: number; newThisWeek: number; newThisMonth: number
+  totalTransactions: number; transactionsThisMonth: number; totalGoals: number
+  mrr: number; arr: number
+  recentUsers: { id: string; name: string; email: string; plan: string; createdAt: string }[]
 }
 
 export interface AdminUser {
-  id:           string
-  name:         string
-  email:        string
-  plan:         string
-  isAdmin:      boolean
-  createdAt:    string
-  _count: {
-    transactions: number
-    goals:        number
-    bills:        number
-  }
+  id: string; name: string; email: string; plan: string; isAdmin: boolean
+  createdAt: string; updatedAt: string
+  _count: { transactions: number; goals: number; bills: number; budgets: number; people: number }
 }
 
-export interface UserListResponse {
-  users:      AdminUser[]
-  total:      number
-  page:       number
-  totalPages: number
+export interface UserDetail {
+  user:               AdminUser & { whatsappPhone?: string | null; stripeCustomerId?: string | null }
+  recentTransactions: { id: string; type: string; amount: number; description: string | null; date: string; category: { name: string; icon: string } }[]
+}
+
+export interface UsersPage {
+  users: AdminUser[]; total: number; page: number; totalPages: number
 }
