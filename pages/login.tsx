@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/router'
 import { Lock, Eye, EyeOff, ShieldAlert } from 'lucide-react'
 import Head from 'next/head'
-import { api } from '@/src/lib/api'
+import { api } from '../src/lib/api'
 
 export default function LoginPage() {
   const [password, setPassword] = useState('')

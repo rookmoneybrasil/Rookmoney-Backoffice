@@ -1,15 +1,18 @@
+'use client'
+
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/router'
 import { LayoutDashboard, Users, LogOut, ChevronLeft } from 'lucide-react'
-import { api } from '@/src/lib/api'
+import { api } from '../src/lib/api'
 
 const NAV = [
-  { href: '/',       icon: LayoutDashboard, label: 'Visão geral' },
-  { href: '/users',  icon: Users,            label: 'Usuários'   },
+  { href: '/',      icon: LayoutDashboard, label: 'Visão geral' },
+  { href: '/users', icon: Users,            label: 'Usuários'   },
 ]
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const router   = useRouter()
+  const router = useRouter()
 
   async function handleLogout() {
     try { await api.logout() } catch { /* ignore */ }
@@ -19,12 +22,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen overflow-hidden bg-ink-900">
       {/* Sidebar */}
-      <aside className="w-56 flex flex-col bg-ink-800 border-r border-white/6 shrink-0">
+      <aside className="w-60 flex flex-col bg-ink-800 border-r border-white/6 shrink-0">
         {/* Logo */}
         <div className="flex items-center gap-3 px-4 py-4 border-b border-white/6">
-          <div className="size-7 rounded-lg bg-brand-800 border border-brand-700/40 flex items-center justify-center text-brand-300 font-black text-sm">R</div>
+          <div className="relative h-7 w-24">
+            <Image src="/logo.svg" alt="Rook Money" fill className="object-contain object-left" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+          </div>
           <span className="text-sm font-bold text-white">Rook Money</span>
-          <span className="ml-auto text-[9px] font-bold text-danger bg-danger/15 border border-danger/30 px-1.5 py-0.5 rounded-full">ADMIN</span>
+          <span className="ml-auto text-[10px] font-bold text-danger bg-danger/15 border border-danger/30 px-1.5 py-0.5 rounded-full leading-none">ADMIN</span>
         </div>
 
         {/* Nav */}
@@ -33,8 +38,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
             const active = router.pathname === href || (href !== '/' && router.pathname.startsWith(href))
             return (
               <Link key={href} href={href}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  active ? 'bg-brand-800/60 text-brand-300 border border-brand-700/40' : 'text-slate-400 hover:bg-ink-700/60 hover:text-slate-200'
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${
+                  active
+                    ? 'bg-brand-800/60 text-brand-300 border border-brand-700/40'
+                    : 'text-slate-500 hover:bg-ink-700/60 hover:text-slate-300'
                 }`}>
                 <Icon className="size-4 shrink-0" />
                 {label}
@@ -45,7 +52,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         {/* Footer */}
         <div className="border-t border-white/6 p-3 flex flex-col gap-1">
-          <a href="http://localhost:3010/dashboard" target="_blank"
+          <a href="http://localhost:3010/dashboard" target="_blank" rel="noreferrer"
             className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-slate-500 hover:text-slate-300 hover:bg-ink-700 transition-colors">
             <ChevronLeft className="size-3.5" />
             Abrir Dashboard
@@ -59,8 +66,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main */}
-      <main className="flex-1 overflow-y-auto">
-        <div className="max-w-6xl mx-auto px-6 py-8">
+      <main className="flex-1 overflow-y-auto p-6 lg:p-8">
+        <div className="max-w-6xl mx-auto">
           {children}
         </div>
       </main>

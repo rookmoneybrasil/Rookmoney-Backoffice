@@ -1,7 +1,6 @@
-const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000'
-
+// Proxy via Next.js rewrite (avoids CORS + same-domain cookie)
 async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${API}/api/v1${path}`, {
+  const res = await fetch(`/api/proxy${path}`, {
     ...opts,
     credentials: 'include',
     headers: { 'Content-Type': 'application/json', ...opts.headers },
