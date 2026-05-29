@@ -24,12 +24,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {/* Sidebar */}
       <aside className="w-60 flex flex-col bg-ink-800 border-r border-white/6 shrink-0">
         {/* Logo */}
-        <div className="flex items-center gap-3 px-4 py-4 border-b border-white/6">
-          <div className="relative h-7 w-24">
-            <Image src="/logo.svg" alt="Rook Money" fill className="object-contain object-left" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+        <div className="flex items-center justify-between px-4 py-4 border-b border-white/6">
+          <div className="relative h-8 shrink-0" style={{ width: 128 }}>
+            <Image src="/logo.svg" alt="Rook Money" fill className="object-contain object-left" priority />
           </div>
-          <span className="text-sm font-bold text-white">Rook Money</span>
-          <span className="ml-auto text-[10px] font-bold text-danger bg-danger/15 border border-danger/30 px-1.5 py-0.5 rounded-full leading-none">ADMIN</span>
+          <span className="text-[10px] font-bold text-danger bg-danger/15 border border-danger/30 px-1.5 py-0.5 rounded-full leading-none shrink-0">ADMIN</span>
         </div>
 
         {/* Nav */}
