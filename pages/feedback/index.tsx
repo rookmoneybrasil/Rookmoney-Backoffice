@@ -120,6 +120,19 @@ export default function FeedbackPage({ data, status, type, page }: { data: Feedb
 
               <p className="text-sm text-slate-400 whitespace-pre-wrap leading-relaxed">{item.body}</p>
 
+              {item.imageData && (
+                <div className="rounded-xl overflow-hidden border border-white/8">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={item.imageData}
+                    alt="Screenshot"
+                    className="w-full max-h-80 object-contain bg-ink-900 cursor-zoom-in"
+                    onClick={() => window.open(item.imageData!, '_blank')}
+                    title="Clique para ampliar"
+                  />
+                </div>
+              )}
+
               <div className="flex justify-end">
                 <Link href={`/users/${item.user.id}`} className="inline-flex items-center gap-1 text-xs text-brand-400 hover:text-brand-300">
                   Ver usuário <ArrowUpRight className="size-3" />

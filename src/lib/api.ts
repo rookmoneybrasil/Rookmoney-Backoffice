@@ -67,6 +67,7 @@ export interface UsersPage {
 
 export interface FeedbackItem {
   id: string; type: string; title: string; body: string; status: string; createdAt: string
+  imageData?: string | null
   user: { id: string; name: string; email: string }
 }
 
