@@ -3,7 +3,7 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useState } from 'react'
-import { Bug, Lightbulb, ArrowUpRight } from 'lucide-react'
+import { Bug, Lightbulb, Ticket, ArrowUpRight } from 'lucide-react'
 import { Layout } from '../../components/layout'
 import { api, type FeedbackPage } from '../../src/lib/api'
 
@@ -66,6 +66,7 @@ export default function FeedbackPage({ data, status, type, page }: { data: Feedb
           <select name="type" defaultValue={type}
             className="bg-ink-800 border border-white/8 rounded-xl px-3 py-2 text-sm text-slate-300 focus:outline-none">
             <option value="">Todos os tipos</option>
+            <option value="ticket">Tickets</option>
             <option value="bug">Bugs</option>
             <option value="suggestion">Sugestões</option>
           </select>
@@ -86,8 +87,11 @@ export default function FeedbackPage({ data, status, type, page }: { data: Feedb
             <div key={item.id} className="bg-ink-800 border border-white/6 rounded-2xl p-5 flex flex-col gap-3">
               <div className="flex items-start gap-3 flex-wrap">
                 {/* Type icon */}
-                <div className={`size-8 rounded-lg flex items-center justify-center shrink-0 ${item.type === 'bug' ? 'bg-danger/10 text-danger' : 'bg-brand-800/60 text-brand-300'}`}>
-                  {item.type === 'bug' ? <Bug className="size-4" /> : <Lightbulb className="size-4" />}
+                <div className={`size-8 rounded-lg flex items-center justify-center shrink-0 ${
+                  item.type === 'bug' ? 'bg-danger/10 text-danger' :
+                  item.type === 'ticket' ? 'bg-brand-800/60 text-brand-300' :
+                  'bg-amber-900/40 text-amber-400'}`}>
+                  {item.type === 'bug' ? <Bug className="size-4" /> : item.type === 'ticket' ? <Ticket className="size-4" /> : <Lightbulb className="size-4" />}
                 </div>
 
                 <div className="flex-1 min-w-0">
@@ -96,8 +100,11 @@ export default function FeedbackPage({ data, status, type, page }: { data: Feedb
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${STATUS_LABELS[item.status]?.className ?? ''}`}>
                       {STATUS_LABELS[item.status]?.label ?? item.status}
                     </span>
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${item.type === 'bug' ? 'bg-danger/10 text-danger' : 'bg-brand-900/60 text-brand-400'}`}>
-                      {item.type === 'bug' ? 'Bug' : 'Sugestão'}
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                      item.type === 'bug' ? 'bg-danger/10 text-danger' :
+                      item.type === 'ticket' ? 'bg-brand-900/60 text-brand-400' :
+                      'bg-amber-900/40 text-amber-400'}`}>
+                      {item.type === 'bug' ? 'Bug' : item.type === 'ticket' ? 'Ticket' : 'Sugestão'}
                     </span>
                   </div>
                   <p className="text-xs text-slate-500 mt-0.5">
