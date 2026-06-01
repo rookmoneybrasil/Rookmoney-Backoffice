@@ -3,12 +3,13 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
-import { LayoutDashboard, Users, LogOut, ChevronLeft } from 'lucide-react'
+import { LayoutDashboard, Users, MessageSquare, LogOut, ChevronLeft } from 'lucide-react'
 import { api } from '../src/lib/api'
 
 const NAV = [
-  { href: '/',      icon: LayoutDashboard, label: 'Visão geral' },
-  { href: '/users', icon: Users,            label: 'Usuários'   },
+  { href: '/',         icon: LayoutDashboard, label: 'Visão geral' },
+  { href: '/users',    icon: Users,           label: 'Usuários'    },
+  { href: '/feedback', icon: MessageSquare,   label: 'Feedback'    },
 ]
 
 export function Layout({ children }: { children: React.ReactNode }) {

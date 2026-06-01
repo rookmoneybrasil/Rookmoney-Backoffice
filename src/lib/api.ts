@@ -30,6 +30,14 @@ export const api = {
   setPlan:    (id: string, plan: 'FREE' | 'PRO') => req(`/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify({ plan }) }),
   setAdmin:   (id: string, isAdmin: boolean)     => req(`/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify({ isAdmin }) }),
   deleteUser: (id: string)                        => req(`/admin/users/${id}`, { method: 'DELETE' }),
+
+  // Feedback
+  feedback: (p?: Record<string, string>) => {
+    const qs = p ? '?' + new URLSearchParams(p).toString() : ''
+    return req<FeedbackPage>(`/admin/feedback${qs}`)
+  },
+  setFeedbackStatus: (id: string, status: string) =>
+    req(`/admin/feedback/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) }),
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -55,4 +63,13 @@ export interface UserDetail {
 
 export interface UsersPage {
   users: AdminUser[]; total: number; page: number; totalPages: number
+}
+
+export interface FeedbackItem {
+  id: string; type: string; title: string; body: string; status: string; createdAt: string
+  user: { id: string; name: string; email: string }
+}
+
+export interface FeedbackPage {
+  items: FeedbackItem[]; total: number; page: number; totalPages: number
 }
