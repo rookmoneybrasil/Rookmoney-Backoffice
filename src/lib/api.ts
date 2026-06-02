@@ -62,7 +62,12 @@ export interface AdminStats {
   totalTransactions: number; transactionsThisMonth: number; totalGoals: number
   mrr: number; arr: number
   openFeedbackCount: number
-  recentUsers: { id: string; name: string; email: string; plan: string; createdAt: string }[]
+  newProThisMonth:     number
+  churnThisMonth:      number
+  growthVsLastMonth:   number | null
+  recentFeedback: { id: string; type: string; title: string; createdAt: string; user: { name: string } }[]
+  recentLogs:     AdminLog[]
+  recentUsers:    { id: string; name: string; email: string; plan: string; createdAt: string }[]
 }
 
 export interface AdminUser {
