@@ -14,13 +14,14 @@ export const getServerSideProps: GetServerSideProps = async ({ req, query }) => 
   if (!cookie) return { redirect: { destination: '/login', permanent: false } }
   const status = (query.status as string) ?? ''
   const type   = (query.type   as string) ?? ''
+  const search = (query.search as string) ?? ''
   const page   = (query.page   as string) ?? '1'
   try {
-    const qs  = new URLSearchParams({ status, type, page, pageSize: '20' }).toString()
+    const qs  = new URLSearchParams({ status, type, search, page, pageSize: '20' }).toString()
     const res = await fetch(`${API_URL}/api/v1/admin/feedback?${qs}`, { headers: { Cookie: `rook_backoffice=${cookie}` } })
     if (res.status === 401) return { redirect: { destination: '/login', permanent: false } }
     const json = await res.json()
-    return { props: { data: json.data, status, type, page: parseInt(page) } }
+    return { props: { data: json.data, status, type, search, page: parseInt(page) } }
   } catch {
     return { redirect: { destination: '/login', permanent: false } }
   }
@@ -32,7 +33,7 @@ const STATUS_LABELS: Record<string, { label: string; className: string }> = {
   done:      { label: 'Resolvido',  className: 'bg-success/10 text-success border border-success/20' },
 }
 
-export default function FeedbackPage({ data, status, type, page }: { data: FeedbackPage; status: string; type: string; page: number }) {
+export default function FeedbackPage({ data, status, type, search, page }: { data: FeedbackPage; status: string; type: string; search: string; page: number }) {
   const router = useRouter()
   const [updating, setUpdating] = useState<string | null>(null)
 
@@ -56,6 +57,8 @@ export default function FeedbackPage({ data, status, type, page }: { data: Feedb
 
         {/* Filters */}
         <form className="flex items-center gap-3 flex-wrap">
+          <input name="search" defaultValue={search} placeholder="Buscar por título ou descrição..."
+            className="flex-1 min-w-48 bg-ink-800 border border-white/8 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-brand-600/60" />
           <select name="status" defaultValue={status}
             className="bg-ink-800 border border-white/8 rounded-xl px-3 py-2 text-sm text-slate-300 focus:outline-none">
             <option value="">Todos os status</option>

@@ -3,17 +3,25 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
-import { LayoutDashboard, Users, MessageSquare, LogOut, ChevronLeft } from 'lucide-react'
+import { LayoutDashboard, Users, MessageSquare, LogOut, ChevronLeft, ScrollText } from 'lucide-react'
 import { api } from '../src/lib/api'
 
-const NAV = [
-  { href: '/',         icon: LayoutDashboard, label: 'Visão geral' },
-  { href: '/users',    icon: Users,           label: 'Usuários'    },
-  { href: '/feedback', icon: MessageSquare,   label: 'Feedback'    },
-]
+interface NavItem { href: string; icon: React.ElementType; label: string; badge?: number }
 
-export function Layout({ children }: { children: React.ReactNode }) {
+interface Props {
+  children: React.ReactNode
+  openFeedbackCount?: number
+}
+
+export function Layout({ children, openFeedbackCount = 0 }: Props) {
   const router = useRouter()
+
+  const NAV: NavItem[] = [
+    { href: '/',         icon: LayoutDashboard, label: 'Visão geral' },
+    { href: '/users',    icon: Users,           label: 'Usuários'    },
+    { href: '/feedback', icon: MessageSquare,   label: 'Feedback',   badge: openFeedbackCount || undefined },
+    { href: '/logs',     icon: ScrollText,      label: 'Log de ações' },
+  ]
 
   async function handleLogout() {
     try { await api.logout() } catch { /* ignore */ }
@@ -34,7 +42,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         {/* Nav */}
         <nav className="flex-1 py-4 px-2 flex flex-col gap-1">
-          {NAV.map(({ href, icon: Icon, label }) => {
+          {NAV.map(({ href, icon: Icon, label, badge }) => {
             const active = router.pathname === href || (href !== '/' && router.pathname.startsWith(href))
             return (
               <Link key={href} href={href}
@@ -44,7 +52,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     : 'text-slate-500 hover:bg-ink-700/60 hover:text-slate-300'
                 }`}>
                 <Icon className="size-4 shrink-0" />
-                {label}
+                <span className="flex-1">{label}</span>
+                {badge && badge > 0 && (
+                  <span className="size-5 rounded-full bg-danger text-white text-[10px] font-bold flex items-center justify-center shrink-0">
+                    {badge > 9 ? '9+' : badge}
+                  </span>
+                )}
               </Link>
             )
           })}
@@ -52,7 +65,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         {/* Footer */}
         <div className="border-t border-white/6 p-3 flex flex-col gap-1">
-          <a href="http://localhost:3010/dashboard" target="_blank" rel="noreferrer"
+          <a href="https://rookmoney.com/dashboard" target="_blank" rel="noreferrer"
             className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-slate-500 hover:text-slate-300 hover:bg-ink-700 transition-colors">
             <ChevronLeft className="size-3.5" />
             Abrir Dashboard

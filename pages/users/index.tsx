@@ -1,9 +1,9 @@
 import { GetServerSideProps } from 'next'
 import Link from 'next/link'
 import Head from 'next/head'
-import { Crown, ArrowUpRight, Search } from 'lucide-react'
+import { Crown, ArrowUpRight, Search, Download } from 'lucide-react'
 import { Layout } from '../../components/layout'
-import type { UsersPage } from '../../src/lib/api'
+import { api, type UsersPage } from '../../src/lib/api'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000'
 
@@ -34,6 +34,10 @@ export default function UsersPage({ data, search, plan, page }: { data: UsersPag
             <h1 className="text-2xl font-bold text-slate-100">Usuários</h1>
             <p className="text-sm text-slate-500 mt-1">{data.total.toLocaleString('pt-BR')} cadastros</p>
           </div>
+          <button onClick={() => api.exportUsers()}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm bg-ink-700 hover:bg-ink-600 border border-white/8 text-slate-300 transition-colors">
+            <Download className="size-4" /> Exportar CSV
+          </button>
         </div>
 
         <form className="flex items-center gap-3 flex-wrap">

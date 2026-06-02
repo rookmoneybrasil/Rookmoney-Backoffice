@@ -35,7 +35,7 @@ function KPI({ label, value, sub, color = 'text-white' }: { label: string; value
 
 export default function Dashboard({ stats: s }: { stats: AdminStats }) {
   return (
-    <Layout>
+    <Layout openFeedbackCount={s.openFeedbackCount}>
       <Head><title>Visão geral — Rook Backoffice</title></Head>
       <div className="flex flex-col gap-8">
         <div>
