@@ -52,30 +52,34 @@ function BarChart({ data, color, labelEvery = 1 }: {
   labelEvery?: number
 }) {
   const max = Math.max(...data.map(d => d.value), 1)
-  const W = 100
+  const W = 600
   const H = 60
+  const LABEL_H = 14
   const n = data.length
   const barW = (W / n) * 0.7
   const gap  = W / n
 
   return (
-    <svg viewBox={`0 0 ${W} ${H + 14}`} className="w-full" preserveAspectRatio="none">
-      {data.map((d, i) => {
-        const h = Math.max(0.5, (d.value / max) * H)
-        const x = i * gap + gap * 0.15
-        return (
-          <g key={i}>
-            <rect x={x} y={H - h} width={barW} height={h} fill={color} rx="0.5" opacity={d.value === 0 ? 0.15 : 1} />
-            {i % labelEvery === 0 && (
-              <text x={x + barW / 2} y={H + 9} textAnchor="middle" fontSize="3.5" fill="#475569">
-                {d.label}
-              </text>
-            )}
-            <title>{d.label}: {d.value}</title>
-          </g>
-        )
-      })}
-    </svg>
+    // Wrapper with matching aspect ratio ensures x/y scale uniformly → no text distortion
+    <div style={{ aspectRatio: `${W} / ${H + LABEL_H}` }}>
+      <svg viewBox={`0 0 ${W} ${H + LABEL_H}`} className="w-full h-full" preserveAspectRatio="none">
+        {data.map((d, i) => {
+          const h = Math.max(0.5, (d.value / max) * H)
+          const x = i * gap + gap * 0.15
+          return (
+            <g key={i}>
+              <rect x={x} y={H - h} width={barW} height={h} fill={color} rx="1" opacity={d.value === 0 ? 0.15 : 1} />
+              {i % labelEvery === 0 && (
+                <text x={x + barW / 2} y={H + 10} textAnchor="middle" fontSize="13" fill="#475569">
+                  {d.label}
+                </text>
+              )}
+              <title>{d.label}: {d.value}</title>
+            </g>
+          )
+        })}
+      </svg>
+    </div>
   )
 }
 
@@ -95,7 +99,8 @@ const LOG_LABELS: Record<string, string> = {
 function shortMonth(iso: string) {
   const [y, m] = iso.split('-')
   const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
-  return `${months[parseInt(m) - 1]}/${y.slice(2)}`
+  const mIdx = parseInt(m) - 1
+  return mIdx === 0 ? `Jan/${y.slice(2)}` : months[mIdx]
 }
 
 function shortDay(iso: string) {
