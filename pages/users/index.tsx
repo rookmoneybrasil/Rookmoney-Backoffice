@@ -1,7 +1,7 @@
 import { GetServerSideProps } from 'next'
 import Link from 'next/link'
 import Head from 'next/head'
-import { Crown, ArrowUpRight, Search, Download } from 'lucide-react'
+import { Crown, ArrowUpRight, Search, Download, UserCheck } from 'lucide-react'
 import { Layout } from '../../components/layout'
 import { api, type UsersPage } from '../../src/lib/api'
 
@@ -49,7 +49,8 @@ export default function UsersPage({ data, search, plan, page }: { data: UsersPag
           <select name="plan" defaultValue={plan}
             className="bg-ink-800 border border-white/8 rounded-xl px-3 py-2 text-sm text-slate-300 focus:outline-none">
             <option value="">Todos os planos</option>
-            <option value="PRO">Pro</option>
+            <option value="PRO">Pro (Stripe)</option>
+            <option value="PRO_MANUAL">Pro Manual</option>
             <option value="FREE">Gratuito</option>
           </select>
           <button type="submit" className="bg-brand-600 hover:bg-brand-500 text-white font-medium px-4 py-2 rounded-xl text-sm transition-colors">
@@ -88,11 +89,18 @@ export default function UsersPage({ data, search, plan, page }: { data: UsersPag
                   </td>
                   <td className="px-5 py-3 text-slate-500 text-xs">{u.email}</td>
                   <td className="px-5 py-3">
-                    <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
-                      u.plan === 'PRO' ? 'bg-amber-900/60 text-amber-400 border border-amber-700/40' : 'bg-ink-700 text-slate-500 border border-white/6'
-                    }`}>
-                      {u.plan === 'PRO' && <Crown className="size-3" />}{u.plan}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
+                        u.plan === 'PRO' ? 'bg-amber-900/60 text-amber-400 border border-amber-700/40' : 'bg-ink-700 text-slate-500 border border-white/6'
+                      }`}>
+                        {u.plan === 'PRO' && <Crown className="size-3" />}{u.plan}
+                      </span>
+                      {u.plan === 'PRO' && !u.stripeSubscriptionId && (
+                        <span title="Ativado manualmente" className="inline-flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-slate-700/60 text-slate-400 border border-white/8">
+                          <UserCheck className="size-2.5" /> manual
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-5 py-3 text-slate-400 tabular-nums">{u._count.transactions.toLocaleString('pt-BR')}</td>
                   <td className="px-5 py-3 text-slate-400 tabular-nums">{u._count.goals}</td>

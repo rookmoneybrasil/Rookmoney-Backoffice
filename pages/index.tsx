@@ -1,20 +1,27 @@
 import { GetServerSideProps } from 'next'
 import Link from 'next/link'
 import Head from 'next/head'
-import { Bug, Lightbulb, Ticket, TrendingUp, TrendingDown, ArrowUpRight } from 'lucide-react'
+import { Bug, Lightbulb, Ticket, TrendingUp, TrendingDown, ArrowUpRight, UserCheck } from 'lucide-react'
 import { Layout } from '../components/layout'
-import type { AdminStats } from '../src/lib/api'
+import type { AdminStats, GrowthData, MrrHistory } from '../src/lib/api'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000'
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
   const cookie = req.cookies['rook_backoffice']
   if (!cookie) return { redirect: { destination: '/login', permanent: false } }
+  const headers = { Cookie: `rook_backoffice=${cookie}` }
   try {
-    const res  = await fetch(`${API_URL}/api/v1/admin/stats`, { headers: { Cookie: `rook_backoffice=${cookie}` } })
-    if (res.status === 401) return { redirect: { destination: '/login', permanent: false } }
-    const json = await res.json()
-    return { props: { stats: json.data } }
+    const [statsRes, growthRes, mrrRes] = await Promise.all([
+      fetch(`${API_URL}/api/v1/admin/stats`,       { headers }),
+      fetch(`${API_URL}/api/v1/admin/growth`,       { headers }),
+      fetch(`${API_URL}/api/v1/admin/mrr-history`,  { headers }),
+    ])
+    if (statsRes.status === 401) return { redirect: { destination: '/login', permanent: false } }
+    const [statsJson, growthJson, mrrJson] = await Promise.all([
+      statsRes.json(), growthRes.json(), mrrRes.json(),
+    ])
+    return { props: { stats: statsJson.data, growth: growthJson.data, mrr: mrrJson.data } }
   } catch {
     return { redirect: { destination: '/login', permanent: false } }
   }
@@ -37,6 +44,41 @@ function KPI({ label, value, sub, color = 'text-white', badge }: { label: string
   )
 }
 
+// ─── SVG Bar Chart ────────────────────────────────────────────────────────────
+
+function BarChart({ data, color, labelEvery = 1 }: {
+  data: { label: string; value: number }[]
+  color: string
+  labelEvery?: number
+}) {
+  const max = Math.max(...data.map(d => d.value), 1)
+  const W = 100
+  const H = 60
+  const n = data.length
+  const barW = (W / n) * 0.7
+  const gap  = W / n
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H + 14}`} className="w-full" preserveAspectRatio="none">
+      {data.map((d, i) => {
+        const h = Math.max(0.5, (d.value / max) * H)
+        const x = i * gap + gap * 0.15
+        return (
+          <g key={i}>
+            <rect x={x} y={H - h} width={barW} height={h} fill={color} rx="0.5" opacity={d.value === 0 ? 0.15 : 1} />
+            {i % labelEvery === 0 && (
+              <text x={x + barW / 2} y={H + 9} textAnchor="middle" fontSize="3.5" fill="#475569">
+                {d.label}
+              </text>
+            )}
+            <title>{d.label}: {d.value}</title>
+          </g>
+        )
+      })}
+    </svg>
+  )
+}
+
 const FEEDBACK_ICONS: Record<string, React.ReactNode> = {
   bug:        <Bug        className="size-3 text-danger" />,
   suggestion: <Lightbulb className="size-3 text-amber-400" />,
@@ -50,8 +92,30 @@ const LOG_LABELS: Record<string, string> = {
   send_email:   '✉️',
 }
 
-export default function Dashboard({ stats: s }: { stats: AdminStats }) {
+function shortMonth(iso: string) {
+  const [y, m] = iso.split('-')
+  const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
+  return `${months[parseInt(m) - 1]}/${y.slice(2)}`
+}
+
+function shortDay(iso: string) {
+  const [, m, d] = iso.split('-')
+  return `${d}/${m}`
+}
+
+export default function Dashboard({ stats: s, growth: g, mrr: m }: { stats: AdminStats; growth: GrowthData; mrr: MrrHistory }) {
   const growth = s.growthVsLastMonth
+
+  const dailyChartData = g.daily.map((d, i) => ({
+    label: i % 5 === 0 ? shortDay(d.date) : '',
+    value: d.count,
+  }))
+
+  const mrrChartData = m.monthly.map(d => ({
+    label: shortMonth(d.month),
+    value: d.newPro,
+  }))
+
   return (
     <Layout openFeedbackCount={s.openFeedbackCount}>
       <Head><title>Visão geral — Rook Backoffice</title></Head>
@@ -85,6 +149,44 @@ export default function Dashboard({ stats: s }: { stats: AdminStats }) {
           <KPI label="Conversões PRO"  value={s.newProThisMonth?.toString() ?? '0'} sub="Free → PRO este mês" color="text-amber-400" />
           <KPI label="Churn este mês"  value={s.churnThisMonth?.toString()  ?? '0'} sub="PRO → Free este mês"
             color={(s.churnThisMonth ?? 0) > 0 ? 'text-danger' : 'text-slate-300'} />
+          {(s.proManual ?? 0) > 0 && (
+            <Link href="/users?plan=PRO_MANUAL" className="bg-ink-800 border border-amber-700/30 rounded-2xl p-5 flex flex-col gap-2 hover:bg-ink-700/60 transition-colors group">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">PRO Manual</p>
+                <UserCheck className="size-3.5 text-amber-500/60 group-hover:text-amber-400 transition-colors" />
+              </div>
+              <p className="text-2xl font-bold text-amber-500">{s.proManual}</p>
+              <p className="text-xs text-slate-600">ativados sem Stripe · ver lista →</p>
+            </Link>
+          )}
+        </div>
+
+        {/* Gráficos de crescimento */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+          {/* Crescimento diário */}
+          <div className="bg-ink-800 border border-white/6 rounded-2xl p-5 flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-semibold text-slate-300">Novos cadastros</h2>
+                <p className="text-xs text-slate-600">últimos 30 dias</p>
+              </div>
+              <span className="text-lg font-bold text-brand-300">{s.newThisMonth}</span>
+            </div>
+            <BarChart data={dailyChartData} color="#3B82F6" labelEvery={5} />
+          </div>
+
+          {/* Novos PRO por mês */}
+          <div className="bg-ink-800 border border-white/6 rounded-2xl p-5 flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-semibold text-slate-300">Novos PRO por mês</h2>
+                <p className="text-xs text-slate-600">últimos 12 meses · usuários PRO ativos por data de cadastro</p>
+              </div>
+              <span className="text-lg font-bold text-amber-400">{m.currentPro}</span>
+            </div>
+            <BarChart data={mrrChartData} color="#F59E0B" labelEvery={1} />
+          </div>
         </div>
 
         {/* Linha inferior: últimos cadastros + feedback aberto + logs */}
