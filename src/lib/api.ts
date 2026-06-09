@@ -76,6 +76,7 @@ export const api = {
 
 export interface AdminStats {
   totalUsers: number; proUsers: number; proManual: number; freeUsers: number; proRate: number
+  onlineUsers: number
   newToday: number; newThisWeek: number; newThisMonth: number
   totalTransactions: number; transactionsThisMonth: number; totalGoals: number
   mrr: number; arr: number

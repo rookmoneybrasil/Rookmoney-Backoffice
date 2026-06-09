@@ -120,9 +120,16 @@ export default function Dashboard({ stats: s, growth: g, mrr: m }: { stats: Admi
     <Layout openFeedbackCount={s.openFeedbackCount}>
       <Head><title>Visão geral — Rook Backoffice</title></Head>
       <div className="flex flex-col gap-8">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-100">Visão geral</h1>
-          <p className="text-sm text-slate-500 mt-1">Métricas em tempo real</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-100">Visão geral</h1>
+            <p className="text-sm text-slate-500 mt-1">Métricas em tempo real</p>
+          </div>
+          <div className="flex items-center gap-2 bg-ink-800 border border-white/6 rounded-xl px-4 py-2">
+            <span className={`size-2 rounded-full shrink-0 ${s.onlineUsers > 0 ? 'bg-success animate-pulse' : 'bg-slate-600'}`} />
+            <span className="text-sm font-semibold text-slate-200">{s.onlineUsers}</span>
+            <span className="text-xs text-slate-500">online agora</span>
+          </div>
         </div>
 
         {/* KPIs principais */}
