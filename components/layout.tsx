@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
-import { LayoutDashboard, Users, MessageSquare, LogOut, ChevronLeft, ScrollText } from 'lucide-react'
+import { LayoutDashboard, Users, MessageSquare, LogOut, ChevronLeft, ScrollText, Crown, Tag } from 'lucide-react'
 import { api } from '../src/lib/api'
 
 interface NavItem { href: string; icon: React.ElementType; label: string; badge?: number }
@@ -17,10 +17,12 @@ export function Layout({ children, openFeedbackCount = 0 }: Props) {
   const router = useRouter()
 
   const NAV: NavItem[] = [
-    { href: '/',         icon: LayoutDashboard, label: 'Visão geral' },
-    { href: '/users',    icon: Users,           label: 'Usuários'    },
-    { href: '/feedback', icon: MessageSquare,   label: 'Feedback',   badge: openFeedbackCount || undefined },
-    { href: '/logs',     icon: ScrollText,      label: 'Log de ações' },
+    { href: '/',               icon: LayoutDashboard, label: 'Visão geral'    },
+    { href: '/users',          icon: Users,           label: 'Usuários'       },
+    { href: '/subscriptions',  icon: Crown,           label: 'Assinaturas PRO' },
+    { href: '/categories',     icon: Tag,             label: 'Categorias'     },
+    { href: '/feedback',       icon: MessageSquare,   label: 'Feedback',      badge: openFeedbackCount || undefined },
+    { href: '/logs',           icon: ScrollText,      label: 'Log de ações'   },
   ]
 
   async function handleLogout() {
