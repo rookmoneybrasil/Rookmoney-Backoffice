@@ -5,6 +5,7 @@ import { useRouter } from 'next/router'
 import { useState } from 'react'
 import { ArrowLeft, Crown, TrendingUp, TrendingDown, Shield, Trash2, Mail, ScrollText, Clock, UserCheck, StickyNote, RefreshCw, LogIn } from 'lucide-react'
 import { InfoIcon } from '../../components/tooltip'
+import { ConfirmModal } from '../../components/confirm-modal'
 import { Layout } from '../../components/layout'
 import { api, type UserDetail } from '../../src/lib/api'
 
@@ -50,6 +51,7 @@ export default function UserDetailPage({ data }: { data: UserDetail }) {
   const { user, recentTransactions, logs = [] } = data
   const router = useRouter()
   const [loading, setLoading]           = useState<string | null>(null)
+  const [confirm, setConfirm]           = useState<{ title: string; message: string; confirmLabel?: string; variant?: 'danger' | 'warning' | 'default'; action: () => Promise<void> } | null>(null)
   const [emailSubject, setEmailSubject] = useState('')
   const [emailBody, setEmailBody]       = useState('')
   const [emailSent, setEmailSent]       = useState(false)
@@ -92,27 +94,60 @@ export default function UserDetailPage({ data }: { data: UserDetail }) {
     finally { setLoading(null) }
   }
 
-  async function demoteFree() {
-    if (!confirm(`Rebaixar ${user.name} para Free?`)) return
-    setLoading('plan')
-    try { await api.setPlanFree(user.id); router.replace(router.asPath) }
-    catch (e) { alert(e instanceof Error ? e.message : 'Erro') }
-    finally { setLoading(null) }
+  function demoteFree() {
+    setConfirm({
+      title:        'Rebaixar para Free',
+      message:      `Remover o plano PRO de ${user.name}? O usuário perderá acesso imediatamente.`,
+      confirmLabel: 'Rebaixar para Free',
+      variant:      'warning',
+      action: async () => {
+        setLoading('plan')
+        try { await api.setPlanFree(user.id); router.replace(router.asPath) }
+        catch (e) { alert(e instanceof Error ? e.message : 'Erro') }
+        finally { setLoading(null) }
+      },
+    })
   }
 
-  async function toggleAdmin() {
-    setLoading('admin')
-    try { await api.setAdmin(user.id, !user.isAdmin); router.replace(router.asPath) }
-    catch (e) { alert(e instanceof Error ? e.message : 'Erro') }
-    finally { setLoading(null) }
+  function toggleAdmin() {
+    setConfirm(user.isAdmin ? {
+      title:        'Remover acesso admin',
+      message:      `Remover o acesso de backoffice de ${user.name}? Ele não poderá mais acessar o painel de admin.`,
+      confirmLabel: 'Remover admin',
+      variant:      'warning',
+      action: async () => {
+        setLoading('admin')
+        try { await api.setAdmin(user.id, false); router.replace(router.asPath) }
+        catch (e) { alert(e instanceof Error ? e.message : 'Erro') }
+        finally { setLoading(null) }
+      },
+    } : {
+      title:        'Tornar admin',
+      message:      `Dar acesso de admin para ${user.name}? Ele poderá acessar e modificar todos os dados no backoffice.`,
+      confirmLabel: 'Tornar admin',
+      variant:      'warning',
+      action: async () => {
+        setLoading('admin')
+        try { await api.setAdmin(user.id, true); router.replace(router.asPath) }
+        catch (e) { alert(e instanceof Error ? e.message : 'Erro') }
+        finally { setLoading(null) }
+      },
+    })
   }
 
-  async function deleteUser() {
-    if (!confirm(`Deletar conta de ${user.name}? Ação irreversível.`)) return
-    setLoading('delete')
-    try { await api.deleteUser(user.id); router.push('/users') }
-    catch (e) { alert(e instanceof Error ? e.message : 'Erro') }
-    finally { setLoading(null) }
+  function deleteUser() {
+    setConfirm({
+      title:        'Deletar conta',
+      message:      `Deletar permanentemente a conta de ${user.name}? Todas as transações, metas e dados serão apagados. Esta ação é irreversível.`,
+      confirmLabel: 'Deletar permanentemente',
+      variant:      'danger',
+      action: async () => {
+        setLoading('delete')
+        try { await api.deleteUser(user.id); router.push('/users') }
+        catch (e) { alert(e instanceof Error ? e.message : 'Erro') }
+        finally { setLoading(null) }
+      },
+    })
   }
 
   async function impersonate() {
@@ -144,6 +179,19 @@ export default function UserDetailPage({ data }: { data: UserDetail }) {
   return (
     <Layout>
       <Head><title>{user.name} — Rook Backoffice</title></Head>
+
+      {confirm && (
+        <ConfirmModal
+          title={confirm.title}
+          message={confirm.message}
+          confirmLabel={confirm.confirmLabel}
+          variant={confirm.variant}
+          loading={!!loading}
+          onConfirm={async () => { await confirm.action(); setConfirm(null) }}
+          onClose={() => setConfirm(null)}
+        />
+      )}
+
       <div className="flex flex-col gap-8 max-w-3xl">
 
         <Link href="/users" className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-300 w-fit transition-colors">
