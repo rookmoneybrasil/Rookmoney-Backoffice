@@ -3,7 +3,7 @@ import Link from 'next/link'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { useState } from 'react'
-import { ArrowLeft, Crown, TrendingUp, TrendingDown, Shield, Trash2, Mail, ScrollText, Clock, UserCheck, StickyNote, RefreshCw } from 'lucide-react'
+import { ArrowLeft, Crown, TrendingUp, TrendingDown, Shield, Trash2, Mail, ScrollText, Clock, UserCheck, StickyNote, RefreshCw, LogIn } from 'lucide-react'
 import { Layout } from '../../components/layout'
 import { api, type UserDetail } from '../../src/lib/api'
 
@@ -114,6 +114,15 @@ export default function UserDetailPage({ data }: { data: UserDetail }) {
     finally { setLoading(null) }
   }
 
+  async function impersonate() {
+    setLoading('impersonate')
+    try {
+      const { url } = await api.impersonate(user.id)
+      window.open(url, '_blank')
+    } catch (e) { alert(e instanceof Error ? e.message : 'Erro') }
+    finally { setLoading(null) }
+  }
+
   async function sendEmail() {
     if (!emailSubject.trim() || !emailBody.trim()) return
     setLoading('email')
@@ -212,6 +221,11 @@ export default function UserDetailPage({ data }: { data: UserDetail }) {
           <button onClick={toggleAdmin} disabled={!!loading}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-ink-700 hover:bg-ink-600 border border-white/8 text-slate-300 transition-colors disabled:opacity-50">
             <Shield className="size-4" />{loading === 'admin' ? '...' : user.isAdmin ? 'Remover admin' : 'Tornar admin'}
+          </button>
+          <button onClick={impersonate} disabled={!!loading}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-ink-700 hover:bg-ink-600 border border-white/8 text-slate-300 transition-colors disabled:opacity-50"
+            title="Abre uma sessão temporária (5 min) como este usuário">
+            <LogIn className="size-4" />{loading === 'impersonate' ? '...' : 'Login como usuário'}
           </button>
           <button onClick={deleteUser} disabled={!!loading}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-red-900/20 hover:bg-red-900/30 border border-red-700/30 text-red-400 transition-colors disabled:opacity-50">

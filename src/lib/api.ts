@@ -77,6 +77,23 @@ export const api = {
       method: 'POST', body: JSON.stringify({ title, body, audience, screen }),
     }),
 
+  // App settings
+  getSettings:    () => req<AppSettings>('/admin/app-settings'),
+  updateSetting:  (key: string, value: string) =>
+    req<{ key: string; value: string }>('/admin/app-settings', { method: 'PATCH', body: JSON.stringify({ key, value }) }),
+
+  // Impersonation
+  impersonate: (userId: string) =>
+    req<{ url: string; user: { id: string; name: string; email: string } }>('/admin/impersonate', {
+      method: 'POST', body: JSON.stringify({ userId }),
+    }),
+
+  // Bulk email
+  bulkEmail: (userIds: string[], subject: string, message: string) =>
+    req<{ sent: number; failed: number; total: number }>('/admin/users/bulk-email', {
+      method: 'POST', body: JSON.stringify({ userIds, subject, message }),
+    }),
+
   // Default categories
   categories: () => req<DefaultCategory[]>('/admin/categories'),
   createCategory: (data: { name: string; icon: string; color: string }) =>
@@ -130,6 +147,14 @@ export interface ReportsData {
     avgTx:    number
     avgGoals: number
   }
+  cohort: { cohortMonth: string; total: number; active30d: number; retentionRate: number }[]
+  funnel: { totalUsers: number; onboarded: number; hasTransactions: number; hasGoals: number }
+}
+
+export interface AppSettings {
+  churn_alert_threshold: string
+  admin_alert_email:     string
+  [key: string]:         string
 }
 
 export interface AdminUser {

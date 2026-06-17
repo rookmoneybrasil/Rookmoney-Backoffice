@@ -3,9 +3,9 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useState } from 'react'
-import { Bug, Lightbulb, Ticket, ArrowUpRight } from 'lucide-react'
+import { Bug, Lightbulb, Ticket, ArrowUpRight, Mail, X } from 'lucide-react'
 import { Layout } from '../../components/layout'
-import { api, type FeedbackPage } from '../../src/lib/api'
+import { api, type FeedbackPage, type FeedbackItem } from '../../src/lib/api'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000'
 
@@ -35,7 +35,12 @@ const STATUS_LABELS: Record<string, { label: string; className: string }> = {
 
 export default function FeedbackPage({ data, status, type, search, page }: { data: FeedbackPage; status: string; type: string; search: string; page: number }) {
   const router = useRouter()
-  const [updating, setUpdating] = useState<string | null>(null)
+  const [updating, setUpdating]   = useState<string | null>(null)
+  const [replyItem, setReplyItem] = useState<FeedbackItem | null>(null)
+  const [subject, setSubject]     = useState('')
+  const [message, setMessage]     = useState('')
+  const [sending, setSending]     = useState(false)
+  const [sent, setSent]           = useState(false)
 
   async function updateStatus(id: string, newStatus: string) {
     setUpdating(id)
@@ -44,10 +49,70 @@ export default function FeedbackPage({ data, status, type, search, page }: { dat
     finally { setUpdating(null) }
   }
 
+  function openReply(item: FeedbackItem) {
+    setReplyItem(item)
+    setSubject(`Re: ${item.title}`)
+    setMessage('')
+    setSent(false)
+  }
+
+  function closeReply() { setReplyItem(null); setSubject(''); setMessage('') }
+
+  async function sendReply() {
+    if (!replyItem || !subject.trim() || !message.trim()) return
+    setSending(true)
+    try {
+      await api.sendEmail(replyItem.user.id, subject.trim(), message.trim())
+      setSent(true)
+      setTimeout(closeReply, 2000)
+    } catch (e) { alert(e instanceof Error ? e.message : 'Erro ao enviar') }
+    finally { setSending(false) }
+  }
+
   return (
     <Layout>
       <Head><title>Feedback — Rook Backoffice</title></Head>
       <div className="flex flex-col gap-6">
+
+        {/* Reply modal */}
+        {replyItem && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div className="bg-ink-800 border border-white/10 rounded-2xl p-6 w-full max-w-lg flex flex-col gap-4 shadow-2xl">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                  <Mail className="size-4 text-brand-400" />
+                  Responder {replyItem.user.name}
+                </p>
+                <button onClick={closeReply} className="text-slate-500 hover:text-slate-300 transition-colors">
+                  <X className="size-4" />
+                </button>
+              </div>
+              <p className="text-xs text-slate-500 -mt-2">Para: {replyItem.user.email}</p>
+              {sent ? (
+                <p className="text-sm text-success text-center py-4">✓ Resposta enviada!</p>
+              ) : (
+                <>
+                  <input value={subject} onChange={e => setSubject(e.target.value)} maxLength={200}
+                    placeholder="Assunto"
+                    className="w-full bg-ink-700 border border-white/8 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-brand-600/60" />
+                  <textarea value={message} onChange={e => setMessage(e.target.value)} rows={5} maxLength={5000}
+                    placeholder="Sua mensagem..."
+                    className="w-full bg-ink-700 border border-white/8 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 resize-none focus:outline-none focus:border-brand-600/60" />
+                  <div className="flex gap-2">
+                    <button onClick={sendReply} disabled={sending || !subject.trim() || !message.trim()}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-brand-600 hover:bg-brand-500 text-white transition-colors disabled:opacity-50">
+                      <Mail className="size-3.5" /> {sending ? 'Enviando...' : 'Enviar resposta'}
+                    </button>
+                    <button onClick={closeReply}
+                      className="px-4 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-200 transition-colors">
+                      Cancelar
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-slate-100">Bugs & Sugestões</h1>
@@ -143,8 +208,12 @@ export default function FeedbackPage({ data, status, type, search, page }: { dat
                 </div>
               )}
 
-              <div className="flex justify-end">
-                <Link href={`/users/${item.user.id}`} className="inline-flex items-center gap-1 text-xs text-brand-400 hover:text-brand-300">
+              <div className="flex items-center justify-between">
+                <button onClick={() => openReply(item)}
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-400 hover:text-brand-300 bg-brand-800/40 hover:bg-brand-700/40 border border-brand-700/30 px-3 py-1.5 rounded-lg transition-colors">
+                  <Mail className="size-3" /> Responder
+                </button>
+                <Link href={`/users/${item.user.id}`} className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-slate-300">
                   Ver usuário <ArrowUpRight className="size-3" />
                 </Link>
               </div>

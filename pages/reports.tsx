@@ -82,13 +82,15 @@ function downloadCsv(filename: string, rows: string[][], headers: string[]) {
   URL.revokeObjectURL(url)
 }
 
-type Tab = 'revenue' | 'acquisition' | 'churn' | 'usage'
+type Tab = 'revenue' | 'acquisition' | 'churn' | 'usage' | 'cohort' | 'funnel'
 
 const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
   { id: 'revenue',     label: 'Receita',    icon: DollarSign },
   { id: 'acquisition', label: 'Aquisição',  icon: Users },
   { id: 'churn',       label: 'Churn',      icon: UserMinus },
   { id: 'usage',       label: 'Uso',        icon: BarChart2 },
+  { id: 'cohort',      label: 'Cohort',     icon: Users },
+  { id: 'funnel',      label: 'Funil',      icon: BarChart2 },
 ]
 
 export default function ReportsPage({ data }: { data: ReportsData }) {
@@ -132,9 +134,11 @@ export default function ReportsPage({ data }: { data: ReportsData }) {
           ))}
         </div>
         <button onClick={() => {
-          if (tab === 'revenue') downloadCsv('receita.csv', data.revenue.map(r => [shortMonth(r.month), r.stripeNew, r.manualNew, fmt(r.mrrStripe), fmt(r.mrrManual), fmt(r.mrr)]), ['Mês','Novos Stripe','Novos Manual','MRR Stripe','MRR Manual','MRR Total'])
+          if (tab === 'revenue')     downloadCsv('receita.csv', data.revenue.map(r => [shortMonth(r.month), r.stripeNew, r.manualNew, fmt(r.mrrStripe), fmt(r.mrrManual), fmt(r.mrr)]), ['Mês','Novos Stripe','Novos Manual','MRR Stripe','MRR Manual','MRR Total'])
           else if (tab === 'acquisition') downloadCsv('aquisicao.csv', data.acquisition.map(r => [shortMonth(r.month), r.signups, r.newPro, r.conversionRate + '%']), ['Mês','Cadastros','Novos PRO','Conversão'])
-          else if (tab === 'churn') downloadCsv('churn.csv', data.churn.map(r => [shortMonth(r.month), r.churn]), ['Mês','Churn'])
+          else if (tab === 'churn')  downloadCsv('churn.csv', data.churn.map(r => [shortMonth(r.month), r.churn]), ['Mês','Churn'])
+          else if (tab === 'cohort') downloadCsv('cohort.csv', (data.cohort ?? []).map(r => [shortMonth(r.cohortMonth), r.total, r.active30d, r.retentionRate + '%']), ['Mês de Cadastro','Usuários','Ativos 30d','Retenção'])
+          else if (tab === 'funnel') downloadCsv('funil.csv', [['Total','Onboarded','Com Transações','Com Metas'],[data.funnel?.totalUsers,data.funnel?.onboarded,data.funnel?.hasTransactions,data.funnel?.hasGoals].map(String)], ['Etapa','Qtd'])
           else downloadCsv('uso.csv', data.usage.topUsers.map((u, i) => [i+1, u.name, u.email, u.txCount]), ['#','Nome','Email','Transações'])
         }} className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm bg-ink-700 hover:bg-ink-600 border border-white/8 text-slate-300 transition-colors">
           <Download className="size-4" /> Exportar CSV
@@ -327,6 +331,100 @@ export default function ReportsPage({ data }: { data: ReportsData }) {
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {/* ── COHORT ───────────────────────────────────────────────────────────── */}
+        {tab === 'cohort' && (
+          <div className="flex flex-col gap-6">
+            <div className="bg-ink-800 border border-amber-700/20 rounded-2xl p-4 flex items-start gap-3">
+              <span className="text-amber-400 text-lg shrink-0">ℹ️</span>
+              <p className="text-xs text-slate-400">
+                Mostra, de cada coorte de cadastro, quantos usuários ainda estavam ativos nos <strong className="text-slate-300">últimos 30 dias</strong>.
+                Um usuário é considerado ativo se tiver <code className="text-brand-300 bg-ink-700 px-1 rounded">lastActiveAt</code> recente.
+              </p>
+            </div>
+
+            <div className="bg-ink-800 border border-white/6 rounded-2xl overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-white/6">
+                    {['Mês de Cadastro','Usuários no mês','Ativos (30d)','Retenção','Barra'].map(h => (
+                      <th key={h} className="text-left text-xs text-slate-500 font-medium px-5 py-3">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {(data.cohort ?? []).length === 0 && (
+                    <tr><td colSpan={5} className="px-5 py-10 text-center text-slate-600">Sem dados.</td></tr>
+                  )}
+                  {[...(data.cohort ?? [])].reverse().map(r => (
+                    <tr key={r.cohortMonth} className="border-b border-white/4 last:border-0 hover:bg-ink-700/40">
+                      <td className="px-5 py-3 text-xs text-slate-300">{shortMonth(r.cohortMonth)}</td>
+                      <td className="px-5 py-3 text-xs text-slate-400 tabular-nums">{r.total.toLocaleString('pt-BR')}</td>
+                      <td className="px-5 py-3 text-xs text-brand-300 tabular-nums font-semibold">{r.active30d.toLocaleString('pt-BR')}</td>
+                      <td className="px-5 py-3">
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                          r.retentionRate >= 50 ? 'bg-success/10 text-success' :
+                          r.retentionRate >= 25 ? 'bg-warning/10 text-warning' :
+                          'bg-ink-700 text-slate-500'
+                        }`}>{r.retentionRate}%</span>
+                      </td>
+                      <td className="px-5 py-3">
+                        <div className="w-32 bg-ink-700 rounded-full h-1.5">
+                          <div className="h-full bg-brand-400 rounded-full" style={{ width: `${r.retentionRate}%` }} />
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* ── FUNIL ────────────────────────────────────────────────────────────── */}
+        {tab === 'funnel' && data.funnel && (
+          <div className="flex flex-col gap-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-ink-800 border border-white/6 rounded-2xl p-5">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Taxa de Onboarding</p>
+                <p className="text-2xl font-bold text-brand-300">
+                  {data.funnel.totalUsers > 0 ? Math.round((data.funnel.onboarded / data.funnel.totalUsers) * 100) : 0}%
+                </p>
+                <p className="text-xs text-slate-600 mt-1">{data.funnel.onboarded.toLocaleString('pt-BR')} de {data.funnel.totalUsers.toLocaleString('pt-BR')} completaram o onboarding</p>
+              </div>
+              <div className="bg-ink-800 border border-white/6 rounded-2xl p-5">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Usuários Engajados</p>
+                <p className="text-2xl font-bold text-amber-400">
+                  {data.funnel.totalUsers > 0 ? Math.round((data.funnel.hasTransactions / data.funnel.totalUsers) * 100) : 0}%
+                </p>
+                <p className="text-xs text-slate-600 mt-1">criaram ao menos 1 transação</p>
+              </div>
+            </div>
+
+            {/* Funnel visualization */}
+            <div className="bg-ink-800 border border-white/6 rounded-2xl p-6 flex flex-col gap-4">
+              <h2 className="text-sm font-semibold text-slate-300">Funil de ativação</h2>
+              {[
+                { label: 'Cadastrados',        count: data.funnel.totalUsers,      color: 'bg-slate-500',   pct: 100 },
+                { label: 'Onboarding completo', count: data.funnel.onboarded,       color: 'bg-brand-500',   pct: data.funnel.totalUsers > 0 ? Math.round((data.funnel.onboarded / data.funnel.totalUsers) * 100) : 0 },
+                { label: 'Tem transações',      count: data.funnel.hasTransactions, color: 'bg-amber-500',   pct: data.funnel.totalUsers > 0 ? Math.round((data.funnel.hasTransactions / data.funnel.totalUsers) * 100) : 0 },
+                { label: 'Tem metas',           count: data.funnel.hasGoals,        color: 'bg-success',     pct: data.funnel.totalUsers > 0 ? Math.round((data.funnel.hasGoals / data.funnel.totalUsers) * 100) : 0 },
+              ].map(step => (
+                <div key={step.label} className="flex items-center gap-4">
+                  <div className="w-36 text-xs text-slate-400 shrink-0">{step.label}</div>
+                  <div className="flex-1 bg-ink-700 rounded-full h-6 overflow-hidden">
+                    <div className={`h-full ${step.color} flex items-center px-3 transition-all`} style={{ width: `${Math.max(step.pct, 2)}%` }}>
+                      <span className="text-xs font-semibold text-white/90 whitespace-nowrap">{step.pct}%</span>
+                    </div>
+                  </div>
+                  <div className="w-24 text-xs text-slate-400 text-right tabular-nums shrink-0">
+                    {step.count.toLocaleString('pt-BR')}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
