@@ -3,7 +3,7 @@ import Link from 'next/link'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { useState } from 'react'
-import { ArrowLeft, Crown, TrendingUp, TrendingDown, Shield, Trash2, Mail, ScrollText, Clock, UserCheck, StickyNote, RefreshCw, LogIn } from 'lucide-react'
+import { ArrowLeft, Crown, TrendingUp, TrendingDown, Shield, Trash2, Mail, ScrollText, Clock, UserCheck, StickyNote, RefreshCw, LogIn, Globe, Smartphone, MapPin, Briefcase, Calendar, MessageSquare, ScanLine, Bell, BellOff, Wallet, Activity } from 'lucide-react'
 import { InfoIcon } from '../../components/tooltip'
 import { ConfirmModal } from '../../components/confirm-modal'
 import { Layout } from '../../components/layout'
@@ -47,8 +47,35 @@ function daysUntil(iso: string | null): number | null {
   return Math.ceil((new Date(iso).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
 }
 
+function timeAgo(iso: string | null): string {
+  if (!iso) return 'Nunca'
+  const diff = Date.now() - new Date(iso).getTime()
+  const mins = Math.floor(diff / 60_000)
+  if (mins < 1) return 'Agora'
+  if (mins < 60) return `${mins}min atrás`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return `${hrs}h atrás`
+  const days = Math.floor(hrs / 24)
+  if (days < 30) return `${days}d atrás`
+  const months = Math.floor(days / 30)
+  return `${months} ${months === 1 ? 'mês' : 'meses'} atrás`
+}
+
+function accountAge(createdAt: string): string {
+  const diff = Date.now() - new Date(createdAt).getTime()
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+  if (days < 1) return 'Hoje'
+  if (days === 1) return '1 dia'
+  if (days < 30) return `${days} dias`
+  const months = Math.floor(days / 30)
+  if (months < 12) return `${months} ${months === 1 ? 'mês' : 'meses'}`
+  const years = Math.floor(months / 12)
+  const rem = months % 12
+  return rem > 0 ? `${years}a ${rem}m` : `${years} ${years === 1 ? 'ano' : 'anos'}`
+}
+
 export default function UserDetailPage({ data }: { data: UserDetail }) {
-  const { user, recentTransactions, logs = [] } = data
+  const { user, recentTransactions, logs = [], financialSummary } = data
   const router = useRouter()
   const [loading, setLoading]           = useState<string | null>(null)
   const [confirm, setConfirm]           = useState<{ title: string; message: string; confirmLabel?: string; variant?: 'danger' | 'warning' | 'default'; action: () => Promise<void> } | null>(null)
@@ -225,10 +252,10 @@ export default function UserDetailPage({ data }: { data: UserDetail }) {
               {user.isAdmin && <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-red-900/30 text-red-400 border border-red-700/30">ADMIN</span>}
             </div>
             <p className="text-slate-400 mt-1">{user.email}</p>
-            <p className="text-slate-600 text-xs mt-1">
-              Cadastrado em {new Date(user.createdAt).toLocaleDateString('pt-BR')}
-              {user.whatsappPhone && ` · WhatsApp: ${user.whatsappPhone}`}
-            </p>
+            <div className="flex items-center gap-3 flex-wrap mt-1 text-xs text-slate-600">
+              <span>Cadastrado em {new Date(user.createdAt).toLocaleDateString('pt-BR')} ({accountAge(user.createdAt)})</span>
+              {user.whatsappPhone && <span>WhatsApp: {user.whatsappPhone}</span>}
+            </div>
 
             {/* PRO Manual info */}
             {isManualPro && (
@@ -249,6 +276,78 @@ export default function UserDetailPage({ data }: { data: UserDetail }) {
                 )}
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Quick info cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {/* Last active */}
+          <div className="bg-ink-800 border border-white/6 rounded-xl p-3.5 flex items-start gap-3">
+            <div className={`size-8 rounded-lg flex items-center justify-center shrink-0 ${
+              user.lastActiveAt && (Date.now() - new Date(user.lastActiveAt).getTime()) < 5 * 60_000
+                ? 'bg-green-500/10 text-green-400' : 'bg-slate-800 text-slate-500'
+            }`}>
+              <Activity className="size-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] text-slate-600 uppercase tracking-wider">Último acesso</p>
+              <p className="text-sm font-semibold text-slate-200 mt-0.5">{timeAgo(user.lastActiveAt ?? null)}</p>
+              {user.lastActiveAt && (
+                <p className="text-[10px] text-slate-600 mt-0.5">
+                  {new Date(user.lastActiveAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })} às {new Date(user.lastActiveAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Login method */}
+          <div className="bg-ink-800 border border-white/6 rounded-xl p-3.5 flex items-start gap-3">
+            <div className="size-8 rounded-lg flex items-center justify-center shrink-0 bg-slate-800 text-slate-400">
+              {user.loginMethod === 'google' ? <Globe className="size-4" /> : <Mail className="size-4" />}
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] text-slate-600 uppercase tracking-wider">Login</p>
+              <p className="text-sm font-semibold text-slate-200 mt-0.5">
+                {user.loginMethod === 'google' ? 'Google' : 'Email/Senha'}
+              </p>
+              <p className="text-[10px] text-slate-600 mt-0.5">
+                {user.hasOnboarded ? '✓ Onboarding completo' : '⏳ Não fez onboarding'}
+              </p>
+            </div>
+          </div>
+
+          {/* Platform */}
+          <div className="bg-ink-800 border border-white/6 rounded-xl p-3.5 flex items-start gap-3">
+            <div className="size-8 rounded-lg flex items-center justify-center shrink-0 bg-slate-800 text-slate-400">
+              <Smartphone className="size-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] text-slate-600 uppercase tracking-wider">Plataforma</p>
+              <p className="text-sm font-semibold text-slate-200 mt-0.5">
+                {user.hasMobileApp ? 'Web + Mobile' : 'Apenas Web'}
+              </p>
+              <p className="text-[10px] text-slate-600 mt-0.5">
+                {user.currency ?? 'BRL'} · {user.dateFormat ?? 'dd/MM/yyyy'}
+              </p>
+            </div>
+          </div>
+
+          {/* Financial summary */}
+          <div className="bg-ink-800 border border-white/6 rounded-xl p-3.5 flex items-start gap-3">
+            <div className="size-8 rounded-lg flex items-center justify-center shrink-0 bg-slate-800 text-slate-400">
+              <Wallet className="size-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] text-slate-600 uppercase tracking-wider">Movimentação total</p>
+              {financialSummary ? (
+                <>
+                  <p className="text-xs text-green-400 mt-1">+{fmt(financialSummary.totalIncome)}</p>
+                  <p className="text-xs text-red-400">-{fmt(financialSummary.totalExpense)}</p>
+                </>
+              ) : (
+                <p className="text-sm text-slate-500 mt-0.5">—</p>
+              )}
+            </div>
           </div>
         </div>
 
@@ -379,13 +478,100 @@ export default function UserDetailPage({ data }: { data: UserDetail }) {
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-5 gap-3">
-          {[{l:'Transações',v:user._count.transactions},{l:'Metas',v:user._count.goals},{l:'Contas',v:user._count.bills},{l:'Orçamentos',v:user._count.budgets},{l:'Pessoas',v:user._count.people}].map(s => (
-            <div key={s.l} className="bg-ink-800 border border-white/6 rounded-xl p-4 text-center">
-              <p className="text-xl font-bold text-slate-100">{s.v.toLocaleString('pt-BR')}</p>
-              <p className="text-xs text-slate-600 mt-0.5">{s.l}</p>
+        <div className="grid grid-cols-4 sm:grid-cols-7 gap-3">
+          {[
+            { l: 'Transações',   v: user._count.transactions },
+            { l: 'Metas',        v: user._count.goals },
+            { l: 'Contas',       v: user._count.bills },
+            { l: 'Orçamentos',   v: user._count.budgets },
+            { l: 'Pessoas',      v: user._count.people },
+            { l: 'Rendas',       v: user._count.incomeSources ?? 0 },
+            { l: 'Fixas',        v: user._count.recurringBills ?? 0 },
+          ].map(s => (
+            <div key={s.l} className="bg-ink-800 border border-white/6 rounded-xl p-3.5 text-center">
+              <p className="text-lg font-bold text-slate-100">{s.v.toLocaleString('pt-BR')}</p>
+              <p className="text-[10px] text-slate-600 mt-0.5">{s.l}</p>
             </div>
           ))}
+        </div>
+
+        {/* Profile + Preferences side by side */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Profile */}
+          <div className="bg-ink-800 border border-white/6 rounded-xl p-4 flex flex-col gap-3">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Perfil</p>
+            <div className="flex flex-col gap-2.5 text-sm">
+              {user.city && (
+                <div className="flex items-center gap-2 text-slate-400">
+                  <MapPin className="size-3.5 text-slate-600 shrink-0" />
+                  <span>{user.city}</span>
+                </div>
+              )}
+              {user.occupation && (
+                <div className="flex items-center gap-2 text-slate-400">
+                  <Briefcase className="size-3.5 text-slate-600 shrink-0" />
+                  <span>{user.occupation}</span>
+                </div>
+              )}
+              {user.birthdate && (
+                <div className="flex items-center gap-2 text-slate-400">
+                  <Calendar className="size-3.5 text-slate-600 shrink-0" />
+                  <span>{new Date(user.birthdate).toLocaleDateString('pt-BR')}</span>
+                </div>
+              )}
+              {user.bio && (
+                <p className="text-xs text-slate-500 italic border-l-2 border-white/10 pl-2.5 mt-1">{user.bio}</p>
+              )}
+              {!user.city && !user.occupation && !user.birthdate && !user.bio && (
+                <p className="text-xs text-slate-700">Nenhuma informação de perfil preenchida.</p>
+              )}
+            </div>
+          </div>
+
+          {/* Preferences & Usage */}
+          <div className="bg-ink-800 border border-white/6 rounded-xl p-4 flex flex-col gap-3">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Uso de features</p>
+            <div className="flex flex-col gap-2.5 text-sm">
+              {/* Chat AI */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-slate-400">
+                  <MessageSquare className="size-3.5 text-slate-600 shrink-0" />
+                  <span>Chat IA</span>
+                </div>
+                <span className="text-xs font-mono text-slate-300">
+                  {(user.chatUsageCount ?? 0) > 0
+                    ? `${user.chatUsageCount}× (${user.chatUsageMonth ?? '—'})`
+                    : 'Nunca usou'}
+                </span>
+              </div>
+              {/* Scanner */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-slate-400">
+                  <ScanLine className="size-3.5 text-slate-600 shrink-0" />
+                  <span>Scanner</span>
+                </div>
+                <span className="text-xs font-mono text-slate-300">
+                  {(user.scannerUsageCount ?? 0) > 0
+                    ? `${user.scannerUsageCount}× (${user.scannerUsageMonth ?? '—'})`
+                    : 'Nunca usou'}
+                </span>
+              </div>
+              {/* Notifications */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-slate-400">
+                  {user.notifBillReminder || user.notifCategoryLimit || user.notifMonthlyEmail
+                    ? <Bell className="size-3.5 text-slate-600 shrink-0" />
+                    : <BellOff className="size-3.5 text-slate-600 shrink-0" />}
+                  <span>Notificações</span>
+                </div>
+                <div className="flex gap-1.5">
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded ${user.notifBillReminder ? 'bg-green-900/30 text-green-400' : 'bg-slate-800 text-slate-600'}`}>Contas</span>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded ${user.notifCategoryLimit ? 'bg-green-900/30 text-green-400' : 'bg-slate-800 text-slate-600'}`}>Limite</span>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded ${user.notifMonthlyEmail ? 'bg-green-900/30 text-green-400' : 'bg-slate-800 text-slate-600'}`}>Mensal</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Stripe */}

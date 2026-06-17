@@ -162,17 +162,33 @@ export interface AdminUser {
   createdAt: string; updatedAt: string; stripeSubscriptionId: string | null
   lastActiveAt: string | null
   proPlanExpiresAt: string | null; proPlanReason: string | null; adminNotes: string | null
-  _count: { transactions: number; goals: number; bills: number; budgets: number; people: number }
+  loginMethod?: 'google' | 'email'
+  hasOnboarded?: boolean
+  hasMobileApp?: boolean
+  profileImage?: string | null
+  bio?: string | null; city?: string | null; occupation?: string | null; birthdate?: string | null
+  currency?: string; dateFormat?: string
+  notifBillReminder?: boolean; notifCategoryLimit?: boolean; notifMonthlyEmail?: boolean
+  chatUsageMonth?: string | null; chatUsageCount?: number
+  scannerUsageMonth?: string | null; scannerUsageCount?: number
+  _count: { transactions: number; goals: number; bills: number; budgets: number; people: number; incomeSources?: number; recurringBills?: number }
 }
 
 export interface AdminLog {
   id: string; action: string; targetId: string; details: string; createdAt: string
 }
 
+export interface FinancialSummary {
+  firstTransactionDate: string | null
+  totalIncome: number
+  totalExpense: number
+}
+
 export interface UserDetail {
   user:               AdminUser & { whatsappPhone?: string | null; stripeCustomerId?: string | null }
   recentTransactions: { id: string; type: string; amount: number; description: string | null; date: string; category: { name: string; icon: string } }[]
   logs:               AdminLog[]
+  financialSummary?:  FinancialSummary
 }
 
 export interface UsersPage {
