@@ -1,7 +1,7 @@
 import { GetServerSideProps } from 'next'
 import Link from 'next/link'
 import Head from 'next/head'
-import { Crown, AlertTriangle } from 'lucide-react'
+import { Crown, AlertTriangle, Clock } from 'lucide-react'
 import { Layout } from '../components/layout'
 import type { SubscriptionsData, SubscriptionEntry } from '../src/lib/api'
 
@@ -28,9 +28,7 @@ function daysUntil(iso: string | null): number | null {
 
 function RenewalBadge({ date, cancel }: { date: string | null; cancel: boolean }) {
   const days = daysUntil(date)
-  if (!date || days === null) {
-    return <span className="text-xs text-slate-600">—</span>
-  }
+  if (!date || days === null) return <span className="text-xs text-slate-600">—</span>
   const label = new Date(date).toLocaleDateString('pt-BR')
   if (cancel) {
     return (
@@ -51,14 +49,36 @@ function RenewalBadge({ date, cancel }: { date: string | null; cancel: boolean }
   return <span className="text-xs text-slate-400">{label}</span>
 }
 
+function ManualExpiryBadge({ date }: { date: string | null }) {
+  if (!date) return <span className="text-xs text-amber-500/60 flex items-center gap-1"><Crown className="size-3" /> Vitalício</span>
+  const days = daysUntil(date)
+  const label = new Date(date).toLocaleDateString('pt-BR')
+  if (days === null) return null
+  if (days < 0)  return <span className="text-xs text-danger">Expirado</span>
+  if (days <= 7) {
+    return (
+      <div className="flex items-center gap-1.5">
+        <Clock className="size-3 text-danger" />
+        <span className="text-xs font-medium text-danger">{label}</span>
+        <span className="text-[10px] bg-danger/10 text-danger border border-danger/20 px-1.5 py-0.5 rounded-full font-semibold">{days}d</span>
+      </div>
+    )
+  }
+  return (
+    <div className="flex items-center gap-1.5">
+      <Clock className="size-3 text-slate-500" />
+      <span className="text-xs text-slate-400">{label}</span>
+    </div>
+  )
+}
+
 export default function SubscriptionsPage({ data }: { data: SubscriptionsData }) {
   const subs = data.subscriptions as SubscriptionEntry[]
-  const withStripe  = subs.filter(s => s.hasStripe).length
-  const cancelling  = subs.filter(s => s.cancelAtPeriodEnd).length
-  const renewingSoon = subs.filter(s => {
-    const d = daysUntil(s.renewalDate)
-    return d !== null && d <= 7 && !s.cancelAtPeriodEnd
-  }).length
+  const withStripe        = subs.filter(s => s.hasStripe).length
+  const manualPro         = subs.filter(s => !s.hasStripe).length
+  const cancelling        = subs.filter(s => s.cancelAtPeriodEnd).length
+  const renewingSoon      = subs.filter(s => { const d = daysUntil(s.renewalDate); return d !== null && d <= 7 && !s.cancelAtPeriodEnd }).length
+  const manualExpiringSoon = subs.filter(s => !s.hasStripe && s.proPlanExpiresAt !== null && (daysUntil(s.proPlanExpiresAt) ?? 99) <= 7).length
 
   return (
     <Layout>
@@ -70,12 +90,13 @@ export default function SubscriptionsPage({ data }: { data: SubscriptionsData })
         </div>
 
         {/* KPIs */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           {[
-            { label: 'Total PRO',       value: data.total,     color: 'text-amber-400' },
-            { label: 'Com Stripe',      value: withStripe,     color: 'text-brand-300' },
-            { label: 'Renovam em 7d',   value: renewingSoon,   color: 'text-warning' },
-            { label: 'Cancelando',      value: cancelling,     color: cancelling > 0 ? 'text-danger' : 'text-slate-400' },
+            { label: 'Total PRO',         value: data.total,          color: 'text-amber-400' },
+            { label: 'Com Stripe',        value: withStripe,          color: 'text-brand-300' },
+            { label: 'PRO Manual',        value: manualPro,           color: 'text-amber-500/80' },
+            { label: 'Renovam em 7d',     value: renewingSoon,        color: 'text-warning' },
+            { label: 'Cancelando',        value: cancelling,          color: cancelling > 0 ? 'text-danger' : 'text-slate-400' },
           ].map(({ label, value, color }) => (
             <div key={label} className="bg-ink-800 border border-white/6 rounded-2xl p-5">
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{label}</p>
@@ -84,12 +105,20 @@ export default function SubscriptionsPage({ data }: { data: SubscriptionsData })
           ))}
         </div>
 
-        {/* Aviso de cancelamentos próximos */}
+        {/* Avisos */}
         {cancelling > 0 && (
           <div className="flex items-center gap-3 bg-danger/10 border border-danger/25 rounded-xl px-4 py-3">
             <AlertTriangle className="size-4 text-danger shrink-0" />
             <p className="text-sm text-danger">
               <span className="font-semibold">{cancelling} assinatura{cancelling > 1 ? 's' : ''}</span> marcada{cancelling > 1 ? 's' : ''} para cancelar no fim do período.
+            </p>
+          </div>
+        )}
+        {manualExpiringSoon > 0 && (
+          <div className="flex items-center gap-3 bg-warning/10 border border-warning/25 rounded-xl px-4 py-3">
+            <Clock className="size-4 text-warning shrink-0" />
+            <p className="text-sm text-warning">
+              <span className="font-semibold">{manualExpiringSoon} PRO manual</span> expira nos próximos 7 dias.
             </p>
           </div>
         )}
@@ -99,14 +128,14 @@ export default function SubscriptionsPage({ data }: { data: SubscriptionsData })
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/6">
-                {['Usuário', 'Cadastro', 'Renovação', 'Stripe', ''].map((h, i) => (
+                {['Usuário', 'Cadastro', 'Renovação / Expiração', 'Fonte', 'Motivo', ''].map((h, i) => (
                   <th key={i} className="text-left text-xs text-slate-500 font-medium px-5 py-3">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {subs.length === 0 && (
-                <tr><td colSpan={5} className="px-5 py-12 text-center text-slate-600">Nenhum usuário PRO.</td></tr>
+                <tr><td colSpan={6} className="px-5 py-12 text-center text-slate-600">Nenhum usuário PRO.</td></tr>
               )}
               {subs.map(s => (
                 <tr key={s.id} className={`border-b border-white/4 last:border-0 hover:bg-ink-700/40 transition-colors ${s.cancelAtPeriodEnd ? 'bg-danger/5' : ''}`}>
@@ -128,12 +157,21 @@ export default function SubscriptionsPage({ data }: { data: SubscriptionsData })
                     {new Date(s.createdAt).toLocaleDateString('pt-BR')}
                   </td>
                   <td className="px-5 py-3">
-                    <RenewalBadge date={s.renewalDate} cancel={s.cancelAtPeriodEnd} />
+                    {s.hasStripe
+                      ? <RenewalBadge date={s.renewalDate} cancel={s.cancelAtPeriodEnd} />
+                      : <ManualExpiryBadge date={s.proPlanExpiresAt ?? null} />
+                    }
                   </td>
                   <td className="px-5 py-3">
-                    {s.stripeSubId
-                      ? <span className="text-[10px] font-mono text-slate-600">{s.stripeSubId.slice(0, 14)}…</span>
-                      : <span className="text-xs text-slate-700">Manual</span>
+                    {s.hasStripe
+                      ? <span className="text-[10px] font-mono text-slate-600">{s.stripeSubId?.slice(0, 14)}…</span>
+                      : <span className="text-xs text-amber-500/70 flex items-center gap-1"><Crown className="size-3" /> Manual</span>
+                    }
+                  </td>
+                  <td className="px-5 py-3">
+                    {s.proPlanReason
+                      ? <span className="text-xs text-slate-500 max-w-[160px] truncate block" title={s.proPlanReason}>{s.proPlanReason}</span>
+                      : <span className="text-xs text-slate-700">—</span>
                     }
                   </td>
                   <td className="px-5 py-3">

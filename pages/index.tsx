@@ -1,7 +1,7 @@
 import { GetServerSideProps } from 'next'
 import Link from 'next/link'
 import Head from 'next/head'
-import { Bug, Lightbulb, Ticket, TrendingUp, TrendingDown, ArrowUpRight, UserCheck } from 'lucide-react'
+import { Bug, Lightbulb, Ticket, TrendingUp, TrendingDown, ArrowUpRight, UserCheck, Clock } from 'lucide-react'
 import { Layout } from '../components/layout'
 import type { AdminStats, GrowthData, MrrHistory } from '../src/lib/api'
 
@@ -136,6 +136,18 @@ export default function Dashboard({ stats: s, growth: g, mrr: m }: { stats: Admi
             <span className="text-xs text-slate-500">online agora</span>
           </div>
         </div>
+
+        {/* Alerta PRO manual expirando */}
+        {(s.manualExpiringCount ?? 0) > 0 && (
+          <div className="flex items-center gap-3 bg-warning/10 border border-warning/25 rounded-xl px-4 py-3">
+            <Clock className="size-4 text-warning shrink-0" />
+            <p className="text-sm text-warning flex-1">
+              <span className="font-semibold">{s.manualExpiringCount} usuário{s.manualExpiringCount > 1 ? 's' : ''} PRO manual</span>{' '}
+              expira{s.manualExpiringCount > 1 ? 'm' : ''} nos próximos 7 dias.
+            </p>
+            <Link href="/subscriptions" className="text-xs text-warning/80 hover:text-warning underline shrink-0">Ver assinaturas →</Link>
+          </div>
+        )}
 
         {/* KPIs principais */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

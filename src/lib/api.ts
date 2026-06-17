@@ -32,17 +32,24 @@ export const api = {
   // MRR history
   mrrHistory: () => req<MrrHistory>('/admin/mrr-history'),
 
+  // Reports
+  reports: () => req<ReportsData>('/admin/reports'),
+
   // Users
   users: (p?: Record<string, string>) => {
     const qs = p ? '?' + new URLSearchParams(p).toString() : ''
     return req<UsersPage>(`/admin/users${qs}`)
   },
-  user:       (id: string) => req<UserDetail>(`/admin/users/${id}`),
-  setPlan:    (id: string, plan: 'FREE' | 'PRO') => req(`/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify({ plan }) }),
-  setAdmin:   (id: string, isAdmin: boolean)     => req(`/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify({ isAdmin }) }),
-  deleteUser:  (id: string)                        => req(`/admin/users/${id}`, { method: 'DELETE' }),
-  exportUsers: () => { window.open('/api/proxy/admin/users/export', '_blank') },
-  sendEmail:  (userId: string, subject: string, message: string) =>
+  user:         (id: string) => req<UserDetail>(`/admin/users/${id}`),
+  setManualPro: (id: string, duration: '3m' | '6m' | '12m' | 'lifetime', reason: string) =>
+    req(`/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify({ plan: 'PRO', duration, reason }) }),
+  setPlanFree:  (id: string) =>
+    req(`/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify({ plan: 'FREE' }) }),
+  setAdmin:     (id: string, isAdmin: boolean) =>
+    req(`/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify({ isAdmin }) }),
+  deleteUser:   (id: string) => req(`/admin/users/${id}`, { method: 'DELETE' }),
+  exportUsers:  () => { window.open('/api/proxy/admin/users/export', '_blank') },
+  sendEmail:    (userId: string, subject: string, message: string) =>
     req<{ message: string }>('/admin/users/email', { method: 'POST', body: JSON.stringify({ userId, subject, message }) }),
 
   // Subscriptions (PRO with Stripe renewal dates)
@@ -81,9 +88,10 @@ export interface AdminStats {
   totalTransactions: number; transactionsThisMonth: number; totalGoals: number
   mrr: number; arr: number
   openFeedbackCount: number
-  newProThisMonth:     number
-  churnThisMonth:      number
-  growthVsLastMonth:   number | null
+  newProThisMonth:      number
+  churnThisMonth:       number
+  manualExpiringCount:  number
+  growthVsLastMonth:    number | null
   recentFeedback: { id: string; type: string; title: string; createdAt: string; user: { name: string } }[]
   recentLogs:     AdminLog[]
   recentUsers:    { id: string; name: string; email: string; plan: string; createdAt: string }[]
@@ -102,9 +110,24 @@ export interface MrrHistory {
   proRate:    number
 }
 
+export interface ReportsData {
+  revenue: {
+    month: string; stripeNew: number; manualNew: number
+    mrrStripe: number; mrrManual: number; mrr: number
+  }[]
+  acquisition: { month: string; signups: number; newPro: number; conversionRate: number }[]
+  churn:       { month: string; churn: number }[]
+  usage: {
+    topUsers: { id: string; name: string; email: string; txCount: number }[]
+    avgTx:    number
+    avgGoals: number
+  }
+}
+
 export interface AdminUser {
   id: string; name: string; email: string; plan: string; isAdmin: boolean
   createdAt: string; updatedAt: string; stripeSubscriptionId: string | null
+  proPlanExpiresAt: string | null; proPlanReason: string | null
   _count: { transactions: number; goals: number; bills: number; budgets: number; people: number }
 }
 
@@ -128,6 +151,8 @@ export interface SubscriptionEntry {
   renewalDate: string | null
   cancelAtPeriodEnd: boolean
   hasStripe: boolean
+  proPlanExpiresAt: string | null
+  proPlanReason:    string | null
 }
 
 export interface SubscriptionsData {
