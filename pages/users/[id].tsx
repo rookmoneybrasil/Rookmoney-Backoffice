@@ -152,10 +152,20 @@ export default function UserDetailPage({ data }: { data: UserDetail }) {
 
   async function impersonate() {
     setLoading('impersonate')
+    // Open popup synchronously (before await) — browsers block window.open() called after async ops
+    const popup = window.open('about:blank', '_blank')
     try {
       const { url } = await api.impersonate(user.id)
-      window.open(url, '_blank')
-    } catch (e) { alert(e instanceof Error ? e.message : 'Erro') }
+      if (popup) {
+        popup.location.href = url
+      } else {
+        // Popup was blocked — fallback: show link
+        alert(`Popup bloqueado. Abra manualmente: ${url}`)
+      }
+    } catch (e) {
+      popup?.close()
+      alert(e instanceof Error ? e.message : 'Erro')
+    }
     finally { setLoading(null) }
   }
 
