@@ -73,7 +73,7 @@ function BarChart({ series, labelEvery = 1 }: {
   )
 }
 
-function downloadCsv(filename: string, rows: string[][], headers: string[]) {
+function downloadCsv(filename: string, rows: (string | number)[][], headers: string[]) {
   const lines = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')
   const blob  = new Blob(['﻿' + lines], { type: 'text/csv;charset=utf-8;' })
   const url   = URL.createObjectURL(blob)

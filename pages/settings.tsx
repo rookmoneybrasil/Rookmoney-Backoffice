@@ -29,7 +29,8 @@ function SettingRow({
   value:       string
   type?:       string
   min?:        number
-  onSave:      (v: string) => Promise<void>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onSave:      (v: string) => Promise<any>
 }) {
   const [val, setVal]       = useState(value)
   const [saving, setSaving] = useState(false)
