@@ -1,7 +1,8 @@
 import { GetServerSideProps } from 'next'
 import Link from 'next/link'
 import Head from 'next/head'
-import { Bug, Lightbulb, Ticket, TrendingUp, TrendingDown, ArrowUpRight, UserCheck, Clock } from 'lucide-react'
+import { Bug, Lightbulb, Ticket, TrendingUp, TrendingDown, ArrowUpRight, UserCheck, Clock, Target } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import { Layout } from '../components/layout'
 import type { AdminStats, GrowthData, MrrHistory } from '../src/lib/api'
 
@@ -110,6 +111,23 @@ function shortDay(iso: string) {
 
 export default function Dashboard({ stats: s, growth: g, mrr: m }: { stats: AdminStats; growth: GrowthData; mrr: MrrHistory }) {
   const growth = s.growthVsLastMonth
+  const [mrrTarget, setMrrTarget]       = useState(0)
+  const [editingTarget, setEditingTarget] = useState(false)
+  const [targetInput, setTargetInput]   = useState('')
+
+  useEffect(() => {
+    const saved = localStorage.getItem('rook_mrr_target')
+    if (saved) setMrrTarget(parseFloat(saved))
+  }, [])
+
+  function saveMrrTarget() {
+    const val = parseFloat(targetInput.replace(',', '.'))
+    if (!isNaN(val) && val > 0) {
+      setMrrTarget(val)
+      localStorage.setItem('rook_mrr_target', String(val))
+    }
+    setEditingTarget(false)
+  }
 
   const dailyChartData = g.daily.map((d, i) => ({
     label: i % 5 === 0 ? shortDay(d.date) : '',
@@ -137,6 +155,42 @@ export default function Dashboard({ stats: s, growth: g, mrr: m }: { stats: Admi
           </div>
         </div>
 
+        {/* Modal de meta de MRR */}
+        {editingTarget && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={() => setEditingTarget(false)}>
+            <div className="bg-ink-800 border border-white/10 rounded-2xl p-6 flex flex-col gap-4 w-80" onClick={e => e.stopPropagation()}>
+              <p className="text-sm font-semibold text-slate-200 flex items-center gap-2"><Target className="size-4 text-success" /> Meta de MRR</p>
+              <input autoFocus value={targetInput} onChange={e => setTargetInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && saveMrrTarget()}
+                placeholder="Ex: 1000.00" type="number" min="0"
+                className="w-full bg-ink-700 border border-white/8 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-success/60" />
+              <div className="flex gap-2">
+                <button onClick={saveMrrTarget} className="px-4 py-2 rounded-lg text-sm font-medium bg-success/20 hover:bg-success/30 text-success border border-success/20 transition-colors">Salvar</button>
+                {mrrTarget > 0 && <button onClick={() => { setMrrTarget(0); localStorage.removeItem('rook_mrr_target'); setEditingTarget(false) }}
+                  className="px-4 py-2 rounded-lg text-sm text-slate-500 hover:text-danger transition-colors">Remover</button>}
+                <button onClick={() => setEditingTarget(false)} className="px-4 py-2 rounded-lg text-sm text-slate-500 hover:text-slate-300 transition-colors">Cancelar</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Barra de progresso de MRR */}
+        {mrrTarget > 0 && (
+          <div className="bg-ink-800 border border-success/20 rounded-xl px-5 py-3 flex items-center gap-4">
+            <Target className="size-4 text-success shrink-0" />
+            <div className="flex-1 flex flex-col gap-1.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-400">Meta mensal de MRR</span>
+                <span className="text-success font-semibold">{Math.min(100, Math.round((s.mrr / mrrTarget) * 100))}%</span>
+              </div>
+              <div className="h-1.5 bg-ink-700 rounded-full overflow-hidden">
+                <div className="h-full bg-success rounded-full transition-all" style={{ width: `${Math.min(100, (s.mrr / mrrTarget) * 100)}%` }} />
+              </div>
+              <p className="text-[10px] text-slate-600">{fmt(s.mrr)} de {fmt(mrrTarget)}</p>
+            </div>
+          </div>
+        )}
+
         {/* Alerta PRO manual expirando */}
         {(s.manualExpiringCount ?? 0) > 0 && (
           <div className="flex items-center gap-3 bg-warning/10 border border-warning/25 rounded-xl px-4 py-3">
@@ -162,7 +216,17 @@ export default function Dashboard({ stats: s, growth: g, mrr: m }: { stats: Admi
             ) : undefined}
           />
           <KPI label="Plano Pro" value={s.proUsers.toLocaleString('pt-BR')} sub={`${s.proRate}% da base`} color="text-amber-400" />
-          <KPI label="MRR"       value={fmt(s.mrr)} sub={`ARR: ${fmt(s.arr)}`} color="text-success" />
+          <KPI label="MRR" value={fmt(s.mrr)} sub={`ARR: ${fmt(s.arr)}`} color="text-success"
+            badge={mrrTarget > 0 ? (
+              <button onClick={() => { setTargetInput(String(mrrTarget)); setEditingTarget(true) }}
+                className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-slate-300 transition-colors">
+                <Target className="size-2.5" /> meta
+              </button>
+            ) : (
+              <button onClick={() => { setTargetInput(''); setEditingTarget(true) }}
+                className="text-[10px] text-slate-700 hover:text-slate-500 transition-colors">+ meta</button>
+            )}
+          />
           <KPI label="Transações" value={s.totalTransactions.toLocaleString('pt-BR')} sub={`+${s.transactionsThisMonth} este mês`} color="text-brand-300" />
         </div>
 

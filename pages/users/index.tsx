@@ -10,21 +10,22 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000'
 export const getServerSideProps: GetServerSideProps = async ({ req, query }) => {
   const cookie = req.cookies['rook_backoffice']
   if (!cookie) return { redirect: { destination: '/login', permanent: false } }
-  const search = (query.search as string) ?? ''
-  const plan   = (query.plan   as string) ?? ''
-  const page   = (query.page   as string) ?? '1'
+  const search   = (query.search   as string) ?? ''
+  const plan     = (query.plan     as string) ?? ''
+  const inactive = (query.inactive as string) ?? ''
+  const page     = (query.page     as string) ?? '1'
   try {
-    const qs  = new URLSearchParams({ search, plan, page, pageSize: '20' }).toString()
+    const qs  = new URLSearchParams({ search, plan, inactive, page, pageSize: '20' }).toString()
     const res = await fetch(`${API_URL}/api/v1/admin/users?${qs}`, { headers: { Cookie: `rook_backoffice=${cookie}` } })
     if (res.status === 401) return { redirect: { destination: '/login', permanent: false } }
     const json = await res.json()
-    return { props: { data: json.data, search, plan, page: parseInt(page) } }
+    return { props: { data: json.data, search, plan, inactive, page: parseInt(page) } }
   } catch {
     return { redirect: { destination: '/login', permanent: false } }
   }
 }
 
-export default function UsersPage({ data, search, plan, page }: { data: UsersPage; search: string; plan: string; page: number }) {
+export default function UsersPage({ data, search, plan, inactive, page }: { data: UsersPage; search: string; plan: string; inactive: string; page: number }) {
   return (
     <Layout>
       <Head><title>Usuários — Rook Backoffice</title></Head>
@@ -53,10 +54,17 @@ export default function UsersPage({ data, search, plan, page }: { data: UsersPag
             <option value="PRO_MANUAL">Pro Manual</option>
             <option value="FREE">Gratuito</option>
           </select>
+          <select name="inactive" defaultValue={inactive}
+            className="bg-ink-800 border border-white/8 rounded-xl px-3 py-2 text-sm text-slate-300 focus:outline-none">
+            <option value="">Qualquer atividade</option>
+            <option value="30">Inativos 30d+</option>
+            <option value="60">Inativos 60d+</option>
+            <option value="90">Inativos 90d+</option>
+          </select>
           <button type="submit" className="bg-brand-600 hover:bg-brand-500 text-white font-medium px-4 py-2 rounded-xl text-sm transition-colors">
             Filtrar
           </button>
-          {(search || plan) && (
+          {(search || plan || inactive) && (
             <Link href="/users" className="text-sm text-slate-500 hover:text-slate-300 px-2">Limpar</Link>
           )}
         </form>
@@ -118,9 +126,9 @@ export default function UsersPage({ data, search, plan, page }: { data: UsersPag
 
         {data.totalPages > 1 && (
           <div className="flex items-center justify-center gap-2">
-            {page > 1 && <Link href={`/users?search=${search}&plan=${plan}&page=${page-1}`} className="px-3 py-1.5 rounded-lg text-sm text-slate-400 hover:bg-ink-700">← Anterior</Link>}
+            {page > 1 && <Link href={`/users?search=${search}&plan=${plan}&inactive=${inactive}&page=${page-1}`} className="px-3 py-1.5 rounded-lg text-sm text-slate-400 hover:bg-ink-700">← Anterior</Link>}
             <span className="text-sm text-slate-500">Página {page} de {data.totalPages}</span>
-            {page < data.totalPages && <Link href={`/users?search=${search}&plan=${plan}&page=${page+1}`} className="px-3 py-1.5 rounded-lg text-sm text-slate-400 hover:bg-ink-700">Próxima →</Link>}
+            {page < data.totalPages && <Link href={`/users?search=${search}&plan=${plan}&inactive=${inactive}&page=${page+1}`} className="px-3 py-1.5 rounded-lg text-sm text-slate-400 hover:bg-ink-700">Próxima →</Link>}
           </div>
         )}
       </div>

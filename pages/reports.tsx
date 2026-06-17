@@ -2,7 +2,7 @@ import { GetServerSideProps } from 'next'
 import Link from 'next/link'
 import Head from 'next/head'
 import { useState } from 'react'
-import { TrendingUp, TrendingDown, Users, DollarSign, UserMinus, BarChart2 } from 'lucide-react'
+import { Users, DollarSign, UserMinus, BarChart2, Download } from 'lucide-react'
 import { Layout } from '../components/layout'
 import type { ReportsData } from '../src/lib/api'
 
@@ -73,6 +73,15 @@ function BarChart({ series, labelEvery = 1 }: {
   )
 }
 
+function downloadCsv(filename: string, rows: string[][], headers: string[]) {
+  const lines = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')
+  const blob  = new Blob(['﻿' + lines], { type: 'text/csv;charset=utf-8;' })
+  const url   = URL.createObjectURL(blob)
+  const a     = document.createElement('a')
+  a.href = url; a.download = filename; a.click()
+  URL.revokeObjectURL(url)
+}
+
 type Tab = 'revenue' | 'acquisition' | 'churn' | 'usage'
 
 const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
@@ -108,7 +117,8 @@ export default function ReportsPage({ data }: { data: ReportsData }) {
           <p className="text-sm text-slate-500 mt-1">Últimos 12 meses</p>
         </div>
 
-        {/* Tabs */}
+        {/* Tabs + export */}
+        <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex gap-1 bg-ink-800 border border-white/6 rounded-xl p-1 w-fit">
           {TABS.map(({ id, label, icon: Icon }) => (
             <button key={id} onClick={() => setTab(id)}
@@ -120,6 +130,15 @@ export default function ReportsPage({ data }: { data: ReportsData }) {
               <Icon className="size-4" /> {label}
             </button>
           ))}
+        </div>
+        <button onClick={() => {
+          if (tab === 'revenue') downloadCsv('receita.csv', data.revenue.map(r => [shortMonth(r.month), r.stripeNew, r.manualNew, fmt(r.mrrStripe), fmt(r.mrrManual), fmt(r.mrr)]), ['Mês','Novos Stripe','Novos Manual','MRR Stripe','MRR Manual','MRR Total'])
+          else if (tab === 'acquisition') downloadCsv('aquisicao.csv', data.acquisition.map(r => [shortMonth(r.month), r.signups, r.newPro, r.conversionRate + '%']), ['Mês','Cadastros','Novos PRO','Conversão'])
+          else if (tab === 'churn') downloadCsv('churn.csv', data.churn.map(r => [shortMonth(r.month), r.churn]), ['Mês','Churn'])
+          else downloadCsv('uso.csv', data.usage.topUsers.map((u, i) => [i+1, u.name, u.email, u.txCount]), ['#','Nome','Email','Transações'])
+        }} className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm bg-ink-700 hover:bg-ink-600 border border-white/8 text-slate-300 transition-colors">
+          <Download className="size-4" /> Exportar CSV
+        </button>
         </div>
 
         {/* ── RECEITA ──────────────────────────────────────────────────────────── */}

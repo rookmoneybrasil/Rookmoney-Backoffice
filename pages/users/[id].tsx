@@ -3,7 +3,7 @@ import Link from 'next/link'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { useState } from 'react'
-import { ArrowLeft, Crown, TrendingUp, TrendingDown, Shield, Trash2, Mail, ScrollText, Clock, UserCheck } from 'lucide-react'
+import { ArrowLeft, Crown, TrendingUp, TrendingDown, Shield, Trash2, Mail, ScrollText, Clock, UserCheck, StickyNote, RefreshCw } from 'lucide-react'
 import { Layout } from '../../components/layout'
 import { api, type UserDetail } from '../../src/lib/api'
 
@@ -56,6 +56,8 @@ export default function UserDetailPage({ data }: { data: UserDetail }) {
   const [showProModal, setShowProModal] = useState(false)
   const [duration, setDuration]         = useState<'3m' | '6m' | '12m' | 'lifetime'>('3m')
   const [reason, setReason]             = useState('')
+  const [notes, setNotes]               = useState(user.adminNotes ?? '')
+  const [notesSaved, setNotesSaved]     = useState(false)
 
   const isManualPro = user.plan === 'PRO' && !user.stripeSubscriptionId
 
@@ -75,6 +77,16 @@ export default function UserDetailPage({ data }: { data: UserDetail }) {
       setShowProModal(false)
       setReason('')
       router.replace(router.asPath)
+    } catch (e) { alert(e instanceof Error ? e.message : 'Erro') }
+    finally { setLoading(null) }
+  }
+
+  async function saveNotes() {
+    setLoading('notes')
+    try {
+      await api.updateAdminNotes(user.id, notes)
+      setNotesSaved(true)
+      setTimeout(() => setNotesSaved(false), 2000)
     } catch (e) { alert(e instanceof Error ? e.message : 'Erro') }
     finally { setLoading(null) }
   }
@@ -175,10 +187,18 @@ export default function UserDetailPage({ data }: { data: UserDetail }) {
         {/* Actions */}
         <div className="flex flex-wrap gap-3">
           {user.plan === 'PRO' ? (
-            <button onClick={demoteFree} disabled={!!loading}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-ink-700 hover:bg-ink-600 border border-white/8 text-slate-300 transition-colors disabled:opacity-50">
-              <Crown className="size-4" />{loading === 'plan' ? '...' : 'Rebaixar para Free'}
-            </button>
+            <>
+              {isManualPro && (
+                <button onClick={() => setShowProModal(true)} disabled={!!loading}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-amber-900/40 hover:bg-amber-800/50 border border-amber-700/30 text-amber-400 transition-colors disabled:opacity-50">
+                  <RefreshCw className="size-4" /> Prorrogar PRO
+                </button>
+              )}
+              <button onClick={demoteFree} disabled={!!loading}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-ink-700 hover:bg-ink-600 border border-white/8 text-slate-300 transition-colors disabled:opacity-50">
+                <Crown className="size-4" />{loading === 'plan' ? '...' : 'Rebaixar para Free'}
+              </button>
+            </>
           ) : (
             <button onClick={() => setShowProModal(true)} disabled={!!loading}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-amber-900/60 hover:bg-amber-800/60 border border-amber-700/40 text-amber-300 transition-colors disabled:opacity-50">
@@ -319,6 +339,29 @@ export default function UserDetailPage({ data }: { data: UserDetail }) {
               ))}
             </div></div>
           }
+        </div>
+
+        {/* Admin notes */}
+        <div className="flex flex-col gap-3">
+          <h2 className="text-sm font-semibold text-slate-300 flex items-center gap-2">
+            <StickyNote className="size-4" /> Notas internas
+            <span className="text-[10px] font-normal text-slate-600">visível só no backoffice</span>
+          </h2>
+          <div className="bg-ink-800 border border-white/6 rounded-2xl p-4 flex flex-col gap-2">
+            <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} maxLength={1000}
+              placeholder="Ex: influencer do TikTok, veio por indicação da Luana, reportou bug X..."
+              className="w-full bg-ink-700 border border-white/8 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 resize-none focus:outline-none focus:border-brand-600/60" />
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-slate-700">{notes.length}/1000</span>
+              <div className="flex items-center gap-2">
+                {notesSaved && <span className="text-xs text-success">✓ Salvo</span>}
+                <button onClick={saveNotes} disabled={loading === 'notes'}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium bg-brand-700/60 hover:bg-brand-600/60 border border-brand-600/30 text-brand-300 transition-colors disabled:opacity-50">
+                  {loading === 'notes' ? 'Salvando...' : 'Salvar nota'}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Action logs */}

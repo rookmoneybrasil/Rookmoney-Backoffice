@@ -47,7 +47,9 @@ export const api = {
     req(`/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify({ plan: 'FREE' }) }),
   setAdmin:     (id: string, isAdmin: boolean) =>
     req(`/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify({ isAdmin }) }),
-  deleteUser:   (id: string) => req(`/admin/users/${id}`, { method: 'DELETE' }),
+  deleteUser:      (id: string) => req(`/admin/users/${id}`, { method: 'DELETE' }),
+  updateAdminNotes:(id: string, adminNotes: string) =>
+    req(`/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify({ adminNotes }) }),
   exportUsers:  () => { window.open('/api/proxy/admin/users/export', '_blank') },
   sendEmail:    (userId: string, subject: string, message: string) =>
     req<{ message: string }>('/admin/users/email', { method: 'POST', body: JSON.stringify({ userId, subject, message }) }),
@@ -68,6 +70,12 @@ export const api = {
     const qs = p ? '?' + new URLSearchParams(p).toString() : ''
     return req<LogsPage>(`/admin/logs${qs}`)
   },
+
+  // Push broadcast
+  pushBroadcast: (title: string, body: string, audience: 'all' | 'pro', screen?: string) =>
+    req<{ sent: number; total: number }>('/admin/push-broadcast', {
+      method: 'POST', body: JSON.stringify({ title, body, audience, screen }),
+    }),
 
   // Default categories
   categories: () => req<DefaultCategory[]>('/admin/categories'),
@@ -127,7 +135,8 @@ export interface ReportsData {
 export interface AdminUser {
   id: string; name: string; email: string; plan: string; isAdmin: boolean
   createdAt: string; updatedAt: string; stripeSubscriptionId: string | null
-  proPlanExpiresAt: string | null; proPlanReason: string | null
+  lastActiveAt: string | null
+  proPlanExpiresAt: string | null; proPlanReason: string | null; adminNotes: string | null
   _count: { transactions: number; goals: number; bills: number; budgets: number; people: number }
 }
 
@@ -176,4 +185,8 @@ export interface FeedbackPage {
 
 export interface LogsPage {
   items: AdminLog[]; total: number; page: number; totalPages: number
+}
+
+export interface BroadcastResult {
+  sent: number; total: number
 }
