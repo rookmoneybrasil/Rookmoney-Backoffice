@@ -1,4 +1,6 @@
 'use client'
+import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 
 interface TooltipProps {
   text: string
@@ -7,28 +9,38 @@ interface TooltipProps {
 }
 
 export function Tooltip({ text, children, position = 'top' }: TooltipProps) {
-  const posClass =
-    position === 'top'    ? 'bottom-full left-1/2 -translate-x-1/2 mb-2' :
-    position === 'bottom' ? 'top-full left-1/2 -translate-x-1/2 mt-2' :
-    position === 'left'   ? 'right-full top-1/2 -translate-y-1/2 mr-2' :
-                            'left-full top-1/2 -translate-y-1/2 ml-2'
+  const [coords, setCoords] = useState<{ top: number; left: number; transform: string } | null>(null)
+  const ref = useRef<HTMLSpanElement>(null)
+  const [mounted, setMounted] = useState(false)
 
-  const arrowClass =
-    position === 'top'    ? 'top-full left-1/2 -translate-x-1/2 border-t-ink-600' :
-    position === 'bottom' ? 'bottom-full left-1/2 -translate-x-1/2 border-b-ink-600' :
-    position === 'left'   ? 'left-full top-1/2 -translate-y-1/2 border-l-ink-600' :
-                            'right-full top-1/2 -translate-y-1/2 border-r-ink-600'
+  useEffect(() => { setMounted(true) }, [])
+
+  function show() {
+    if (!ref.current) return
+    const r = ref.current.getBoundingClientRect()
+    if      (position === 'top')    setCoords({ top: r.top - 8,              left: r.left + r.width / 2,  transform: 'translate(-50%, -100%)' })
+    else if (position === 'bottom') setCoords({ top: r.bottom + 8,           left: r.left + r.width / 2,  transform: 'translate(-50%, 0)'     })
+    else if (position === 'left')   setCoords({ top: r.top + r.height / 2,   left: r.left - 8,             transform: 'translate(-100%, -50%)' })
+    else                            setCoords({ top: r.top + r.height / 2,   left: r.right + 8,            transform: 'translate(0, -50%)'     })
+  }
 
   return (
-    <span className="relative group/tt inline-flex items-center">
-      {children}
-      <span className={`absolute ${posClass} z-[9999] hidden group-hover/tt:block pointer-events-none w-max max-w-[220px] whitespace-normal`}>
-        <span className="block bg-ink-600 border border-white/12 text-slate-300 text-[11px] leading-relaxed rounded-lg px-3 py-2 shadow-2xl">
-          {text}
-        </span>
-        <span className={`absolute ${arrowClass} border-4 border-transparent`} />
+    <>
+      <span ref={ref} onMouseEnter={show} onMouseLeave={() => setCoords(null)} className="inline-flex items-center">
+        {children}
       </span>
-    </span>
+      {mounted && coords && createPortal(
+        <div
+          className="fixed pointer-events-none z-[9999] w-max max-w-[220px] whitespace-normal"
+          style={{ top: coords.top, left: coords.left, transform: coords.transform }}
+        >
+          <span className="block bg-gray-950 border border-white/20 text-slate-300 text-[11px] leading-relaxed rounded-lg px-3 py-2 shadow-2xl">
+            {text}
+          </span>
+        </div>,
+        document.body
+      )}
+    </>
   )
 }
 
