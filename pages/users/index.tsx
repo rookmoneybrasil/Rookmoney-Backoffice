@@ -4,6 +4,7 @@ import Head from 'next/head'
 import { useState } from 'react'
 import { Crown, ArrowUpRight, Search, Download, UserCheck, Mail, X, CheckSquare, Square } from 'lucide-react'
 import { Layout } from '../../components/layout'
+import { InfoIcon } from '../../components/tooltip'
 import { api, type UsersPage, type AdminUser } from '../../src/lib/api'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000'
@@ -115,11 +116,13 @@ export default function UsersPage({ data, search, plan, inactive, page }: { data
           <div className="flex items-center gap-2">
             {selected.size > 0 && (
               <button onClick={() => setShowBulk(true)}
+                title="Envia um email personalizado para todos os usuários selecionados de uma vez"
                 className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm bg-brand-700/60 hover:bg-brand-600/60 border border-brand-700/40 text-brand-300 transition-colors">
                 <Mail className="size-4" /> Email para {selected.size}
               </button>
             )}
             <button onClick={() => api.exportUsers()}
+              title="Baixa um arquivo CSV com todos os usuários (respeitando os filtros ativos)"
               className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm bg-ink-700 hover:bg-ink-600 border border-white/8 text-slate-300 transition-colors">
               <Download className="size-4" /> Exportar CSV
             </button>
@@ -132,20 +135,26 @@ export default function UsersPage({ data, search, plan, inactive, page }: { data
             <input name="search" defaultValue={search} placeholder="Buscar por nome ou e-mail..."
               className="w-full bg-ink-800 border border-white/8 rounded-xl pl-9 pr-4 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-600/60" />
           </div>
-          <select name="plan" defaultValue={plan}
-            className="bg-ink-800 border border-white/8 rounded-xl px-3 py-2 text-sm text-slate-300 focus:outline-none">
-            <option value="">Todos os planos</option>
-            <option value="PRO">Pro (Stripe)</option>
-            <option value="PRO_MANUAL">Pro Manual</option>
-            <option value="FREE">Gratuito</option>
-          </select>
-          <select name="inactive" defaultValue={inactive}
-            className="bg-ink-800 border border-white/8 rounded-xl px-3 py-2 text-sm text-slate-300 focus:outline-none">
-            <option value="">Qualquer atividade</option>
-            <option value="30">Inativos 30d+</option>
-            <option value="60">Inativos 60d+</option>
-            <option value="90">Inativos 90d+</option>
-          </select>
+          <div className="flex items-center gap-1.5">
+            <select name="plan" defaultValue={plan}
+              className="bg-ink-800 border border-white/8 rounded-xl px-3 py-2 text-sm text-slate-300 focus:outline-none">
+              <option value="">Todos os planos</option>
+              <option value="PRO">Pro (Stripe)</option>
+              <option value="PRO_MANUAL">Pro Manual</option>
+              <option value="FREE">Gratuito</option>
+            </select>
+            <InfoIcon text="PRO (Stripe) = assinatura paga por cartão. PRO Manual = ativado pelo backoffice sem cobrança." position="bottom" />
+          </div>
+          <div className="flex items-center gap-1.5">
+            <select name="inactive" defaultValue={inactive}
+              className="bg-ink-800 border border-white/8 rounded-xl px-3 py-2 text-sm text-slate-300 focus:outline-none">
+              <option value="">Qualquer atividade</option>
+              <option value="30">Inativos 30d+</option>
+              <option value="60">Inativos 60d+</option>
+              <option value="90">Inativos 90d+</option>
+            </select>
+            <InfoIcon text="Filtra usuários que não abriram o app há X dias. Útil para campanhas de reativação." position="bottom" />
+          </div>
           <button type="submit" className="bg-brand-600 hover:bg-brand-500 text-white font-medium px-4 py-2 rounded-xl text-sm transition-colors">
             Filtrar
           </button>
@@ -159,12 +168,22 @@ export default function UsersPage({ data, search, plan, inactive, page }: { data
             <thead>
               <tr className="border-b border-white/6">
                 <th className="px-4 py-3 w-8">
-                  <button onClick={toggleAll} className="text-slate-500 hover:text-slate-300 transition-colors">
+                  <button onClick={toggleAll} title="Selecionar/desmarcar todos nesta página para email em massa" className="text-slate-500 hover:text-slate-300 transition-colors">
                     {allSelected ? <CheckSquare className="size-4 text-brand-400" /> : <Square className="size-4" />}
                   </button>
                 </th>
-                {['Usuário','E-mail','Plano','Transações','Metas','Cadastro',''].map((h,i) => (
-                  <th key={i} className="text-left text-xs text-slate-500 font-medium px-4 py-3">{h}</th>
+                {[
+                  { h: 'Usuário',    tip: '' },
+                  { h: 'E-mail',     tip: '' },
+                  { h: 'Plano',      tip: 'FREE = gratuito. PRO = acesso completo. "manual" = ativado pelo backoffice sem Stripe.' },
+                  { h: 'Transações', tip: 'Total de transações (receitas + despesas) registradas pelo usuário' },
+                  { h: 'Metas',      tip: 'Número de metas de poupança criadas' },
+                  { h: 'Cadastro',   tip: 'Data em que o usuário criou a conta' },
+                  { h: '', tip: '' },
+                ].map(({ h, tip }, i) => (
+                  <th key={i} className="text-left text-xs text-slate-500 font-medium px-4 py-3">
+                    {h && <span className="flex items-center gap-1">{h}{tip && <InfoIcon text={tip} />}</span>}
+                  </th>
                 ))}
               </tr>
             </thead>

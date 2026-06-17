@@ -3,6 +3,7 @@ import Link from 'next/link'
 import Head from 'next/head'
 import { Crown, AlertTriangle, Clock } from 'lucide-react'
 import { Layout } from '../components/layout'
+import { InfoIcon } from '../components/tooltip'
 import type { SubscriptionsData, SubscriptionEntry } from '../src/lib/api'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000'
@@ -92,14 +93,17 @@ export default function SubscriptionsPage({ data }: { data: SubscriptionsData })
         {/* KPIs */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           {[
-            { label: 'Total PRO',         value: data.total,          color: 'text-amber-400' },
-            { label: 'Com Stripe',        value: withStripe,          color: 'text-brand-300' },
-            { label: 'PRO Manual',        value: manualPro,           color: 'text-amber-500/80' },
-            { label: 'Renovam em 7d',     value: renewingSoon,        color: 'text-warning' },
-            { label: 'Cancelando',        value: cancelling,          color: cancelling > 0 ? 'text-danger' : 'text-slate-400' },
-          ].map(({ label, value, color }) => (
+            { label: 'Total PRO',     value: data.total,     color: 'text-amber-400',               tip: 'Todos os usuários PRO ativos agora (Stripe + Manual).' },
+            { label: 'Com Stripe',    value: withStripe,     color: 'text-brand-300',               tip: 'Assinatura paga por cartão via Stripe. Renova automaticamente.' },
+            { label: 'PRO Manual',    value: manualPro,      color: 'text-amber-500/80',            tip: 'PRO ativado pelo backoffice sem cobrança — gratuidades, parcerias, etc.' },
+            { label: 'Renovam em 7d', value: renewingSoon,   color: 'text-warning',                 tip: 'Assinaturas Stripe que renovam (cobram o cartão) nos próximos 7 dias.' },
+            { label: 'Cancelando',    value: cancelling,     color: cancelling > 0 ? 'text-danger' : 'text-slate-400', tip: 'Usuário cancelou — ainda tem acesso até o fim do período pago, mas não vai renovar.' },
+          ].map(({ label, value, color, tip }) => (
             <div key={label} className="bg-ink-800 border border-white/6 rounded-2xl p-5">
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{label}</p>
+              <div className="flex items-center gap-1.5 mb-2">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{label}</p>
+                <InfoIcon text={tip} />
+              </div>
               <p className={`text-2xl font-bold ${color}`}>{value}</p>
             </div>
           ))}
@@ -128,9 +132,18 @@ export default function SubscriptionsPage({ data }: { data: SubscriptionsData })
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/6">
-                {['Usuário', 'Cadastro', 'Renovação / Expiração', 'Fonte', 'Motivo', ''].map((h, i) => (
-                  <th key={i} className="text-left text-xs text-slate-500 font-medium px-5 py-3">{h}</th>
-                ))}
+                {[
+                { h: 'Usuário',                tip: '' },
+                { h: 'Cadastro',               tip: 'Data em que o usuário criou a conta no app' },
+                { h: 'Renovação / Expiração',  tip: 'Stripe: data da próxima cobrança. Manual: data em que o acesso PRO expira.' },
+                { h: 'Fonte',                  tip: 'Como o PRO foi ativado: Stripe (pagamento) ou Manual (backoffice)' },
+                { h: 'Motivo',                 tip: 'Motivo registrado pelo admin ao ativar PRO manual' },
+                { h: '', tip: '' },
+              ].map(({ h, tip }, i) => (
+                <th key={i} className="text-left text-xs text-slate-500 font-medium px-5 py-3">
+                  {h && <span className="flex items-center gap-1.5">{h}{tip && <InfoIcon text={tip} />}</span>}
+                </th>
+              ))}
               </tr>
             </thead>
             <tbody>

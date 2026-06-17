@@ -185,6 +185,7 @@ export default function FeedbackPage({ data, status, type, search, page }: { dat
                   value={item.status}
                   disabled={updating === item.id}
                   onChange={e => updateStatus(item.id, e.target.value)}
+                  title="Aberto = novo, sem resposta. Analisando = em progresso. Resolvido = encerrado."
                   className="bg-ink-700 border border-white/8 rounded-lg px-2 py-1 text-xs text-slate-300 focus:outline-none disabled:opacity-50"
                 >
                   <option value="open">Aberto</option>
@@ -210,6 +211,7 @@ export default function FeedbackPage({ data, status, type, search, page }: { dat
 
               <div className="flex items-center justify-between">
                 <button onClick={() => openReply(item)}
+                  title="Abre um modal para enviar um email de resposta diretamente para o usuário via Resend"
                   className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-400 hover:text-brand-300 bg-brand-800/40 hover:bg-brand-700/40 border border-brand-700/30 px-3 py-1.5 rounded-lg transition-colors">
                   <Mail className="size-3" /> Responder
                 </button>

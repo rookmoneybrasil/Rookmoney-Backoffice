@@ -4,6 +4,7 @@ import Head from 'next/head'
 import { Bug, Lightbulb, Ticket, TrendingUp, TrendingDown, ArrowUpRight, UserCheck, Clock, Target } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { Layout } from '../components/layout'
+import { InfoIcon } from '../components/tooltip'
 import type { AdminStats, GrowthData, MrrHistory } from '../src/lib/api'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000'
@@ -32,11 +33,14 @@ function fmt(n: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(n)
 }
 
-function KPI({ label, value, sub, color = 'text-white', badge }: { label: string; value: string; sub?: string; color?: string; badge?: React.ReactNode }) {
+function KPI({ label, value, sub, color = 'text-white', badge, tooltip }: { label: string; value: string; sub?: string; color?: string; badge?: React.ReactNode; tooltip?: string }) {
   return (
     <div className="bg-ink-800 border border-white/6 rounded-2xl p-5">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{label}</p>
+        <div className="flex items-center gap-1.5">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{label}</p>
+          {tooltip && <InfoIcon text={tooltip} />}
+        </div>
         {badge}
       </div>
       <p className={`text-2xl font-bold ${color}`}>{value}</p>
@@ -148,7 +152,7 @@ export default function Dashboard({ stats: s, growth: g, mrr: m }: { stats: Admi
             <h1 className="text-2xl font-bold text-slate-100">Visão geral</h1>
             <p className="text-sm text-slate-500 mt-1">Métricas em tempo real</p>
           </div>
-          <div className="flex items-center gap-2 bg-ink-800 border border-white/6 rounded-xl px-4 py-2">
+          <div className="flex items-center gap-2 bg-ink-800 border border-white/6 rounded-xl px-4 py-2" title="Usuários que fizeram alguma ação nos últimos 5 minutos">
             <span className={`size-2 rounded-full shrink-0 ${s.onlineUsers > 0 ? 'bg-success animate-pulse' : 'bg-slate-600'}`} />
             <span className="text-sm font-semibold text-slate-200">{s.onlineUsers}</span>
             <span className="text-xs text-slate-500">online agora</span>
@@ -206,6 +210,7 @@ export default function Dashboard({ stats: s, growth: g, mrr: m }: { stats: Admi
         {/* KPIs principais */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <KPI label="Total usuários" value={s.totalUsers.toLocaleString('pt-BR')} sub={`+${s.newToday} hoje`}
+            tooltip="Total de contas cadastradas (free + PRO). O % ao lado mostra crescimento vs o mês anterior."
             badge={growth !== null && growth !== undefined ? (
               <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 ${
                 growth >= 0 ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'
@@ -215,8 +220,10 @@ export default function Dashboard({ stats: s, growth: g, mrr: m }: { stats: Admi
               </span>
             ) : undefined}
           />
-          <KPI label="Plano Pro" value={s.proUsers.toLocaleString('pt-BR')} sub={`${s.proRate}% da base`} color="text-amber-400" />
+          <KPI label="Plano Pro" value={s.proUsers.toLocaleString('pt-BR')} sub={`${s.proRate}% da base`} color="text-amber-400"
+            tooltip="Usuários PRO ativos agora — inclui assinaturas Stripe e PRO manual." />
           <KPI label="MRR" value={fmt(s.mrr)} sub={`ARR: ${fmt(s.arr)}`} color="text-success"
+            tooltip="Receita Mensal Recorrente estimada: total PRO × R$ 19,90. ARR = MRR × 12."
             badge={mrrTarget > 0 ? (
               <button onClick={() => { setTargetInput(String(mrrTarget)); setEditingTarget(true) }}
                 className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-slate-300 transition-colors">
@@ -227,18 +234,23 @@ export default function Dashboard({ stats: s, growth: g, mrr: m }: { stats: Admi
                 className="text-[10px] text-slate-700 hover:text-slate-500 transition-colors">+ meta</button>
             )}
           />
-          <KPI label="Transações" value={s.totalTransactions.toLocaleString('pt-BR')} sub={`+${s.transactionsThisMonth} este mês`} color="text-brand-300" />
+          <KPI label="Transações" value={s.totalTransactions.toLocaleString('pt-BR')} sub={`+${s.transactionsThisMonth} este mês`} color="text-brand-300"
+            tooltip="Total de transações registradas por todos os usuários (receitas + despesas)." />
         </div>
 
         {/* Métricas de negócio */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <KPI label="Novos este mês"  value={s.newThisMonth.toString()}     sub="cadastros" />
-          <KPI label="Gratuitos"       value={s.freeUsers.toLocaleString('pt-BR')} sub={`${100 - s.proRate}% da base`} />
-          <KPI label="Conversões PRO"  value={s.newProThisMonth?.toString() ?? '0'} sub="Free → PRO este mês" color="text-amber-400" />
+          <KPI label="Novos este mês"  value={s.newThisMonth.toString()}     sub="cadastros"
+            tooltip="Cadastros realizados no mês atual (do dia 1 até hoje)." />
+          <KPI label="Gratuitos"       value={s.freeUsers.toLocaleString('pt-BR')} sub={`${100 - s.proRate}% da base`}
+            tooltip="Usuários no plano Free — potenciais conversões para PRO." />
+          <KPI label="Conversões PRO"  value={s.newProThisMonth?.toString() ?? '0'} sub="Free → PRO este mês" color="text-amber-400"
+            tooltip="Usuários que viraram PRO neste mês — seja via Stripe ou ativação manual." />
           <KPI label="Churn este mês"  value={s.churnThisMonth?.toString()  ?? '0'} sub="PRO → Free este mês"
-            color={(s.churnThisMonth ?? 0) > 0 ? 'text-danger' : 'text-slate-300'} />
+            color={(s.churnThisMonth ?? 0) > 0 ? 'text-danger' : 'text-slate-300'}
+            tooltip="Usuários que voltaram para Free neste mês. Conta downgrades manuais e expirações automáticas." />
           {(s.proManual ?? 0) > 0 && (
-            <Link href="/users?plan=PRO_MANUAL" className="bg-ink-800 border border-amber-700/30 rounded-2xl p-5 flex flex-col gap-2 hover:bg-ink-700/60 transition-colors group">
+            <Link href="/users?plan=PRO_MANUAL" title="PRO ativado pelo backoffice sem cobrança via Stripe — gratuidades, parcerias, testes" className="bg-ink-800 border border-amber-700/30 rounded-2xl p-5 flex flex-col gap-2 hover:bg-ink-700/60 transition-colors group">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">PRO Manual</p>
                 <UserCheck className="size-3.5 text-amber-500/60 group-hover:text-amber-400 transition-colors" />

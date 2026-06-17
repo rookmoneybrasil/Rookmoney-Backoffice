@@ -4,6 +4,7 @@ import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { useState } from 'react'
 import { ArrowLeft, Crown, TrendingUp, TrendingDown, Shield, Trash2, Mail, ScrollText, Clock, UserCheck, StickyNote, RefreshCw, LogIn } from 'lucide-react'
+import { InfoIcon } from '../../components/tooltip'
 import { Layout } from '../../components/layout'
 import { api, type UserDetail } from '../../src/lib/api'
 
@@ -199,35 +200,41 @@ export default function UserDetailPage({ data }: { data: UserDetail }) {
             <>
               {isManualPro && (
                 <button onClick={() => setShowProModal(true)} disabled={!!loading}
+                  title="Estende a data de expiração do PRO manual — mantém o motivo original no histórico"
                   className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-amber-900/40 hover:bg-amber-800/50 border border-amber-700/30 text-amber-400 transition-colors disabled:opacity-50">
                   <RefreshCw className="size-4" /> Prorrogar PRO
                 </button>
               )}
               <button onClick={demoteFree} disabled={!!loading}
+                title="Remove o acesso PRO imediatamente. O usuário volta para o plano Free."
                 className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-ink-700 hover:bg-ink-600 border border-white/8 text-slate-300 transition-colors disabled:opacity-50">
                 <Crown className="size-4" />{loading === 'plan' ? '...' : 'Rebaixar para Free'}
               </button>
             </>
           ) : (
             <button onClick={() => setShowProModal(true)} disabled={!!loading}
+              title="Dá acesso PRO sem cobrança. Você precisa informar a duração e o motivo (fica registrado no log)."
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-amber-900/60 hover:bg-amber-800/60 border border-amber-700/40 text-amber-300 transition-colors disabled:opacity-50">
               <Crown className="size-4" /> Promover para PRO Manual
             </button>
           )}
           <button onClick={() => setShowEmail(v => !v)} disabled={!!loading}
+            title="Envia um email diretamente para este usuário via Resend"
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-brand-800/60 hover:bg-brand-700/60 border border-brand-700/40 text-brand-300 transition-colors disabled:opacity-50">
             <Mail className="size-4" /> Enviar email
           </button>
           <button onClick={toggleAdmin} disabled={!!loading}
+            title={user.isAdmin ? 'Remove o acesso ao backoffice deste usuário' : 'Dá acesso ao backoffice — use com cuidado'}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-ink-700 hover:bg-ink-600 border border-white/8 text-slate-300 transition-colors disabled:opacity-50">
             <Shield className="size-4" />{loading === 'admin' ? '...' : user.isAdmin ? 'Remover admin' : 'Tornar admin'}
           </button>
           <button onClick={impersonate} disabled={!!loading}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-ink-700 hover:bg-ink-600 border border-white/8 text-slate-300 transition-colors disabled:opacity-50"
-            title="Abre uma sessão temporária (5 min) como este usuário">
+            title="Gera um link temporário (5 min) que abre o dashboard logado como este usuário — útil para debugar problemas relatados"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-ink-700 hover:bg-ink-600 border border-white/8 text-slate-300 transition-colors disabled:opacity-50">
             <LogIn className="size-4" />{loading === 'impersonate' ? '...' : 'Login como usuário'}
           </button>
           <button onClick={deleteUser} disabled={!!loading}
+            title="Deleta permanentemente a conta e todos os dados do usuário. Irreversível."
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-red-900/20 hover:bg-red-900/30 border border-red-700/30 text-red-400 transition-colors disabled:opacity-50">
             <Trash2 className="size-4" />{loading === 'delete' ? '...' : 'Deletar conta'}
           </button>

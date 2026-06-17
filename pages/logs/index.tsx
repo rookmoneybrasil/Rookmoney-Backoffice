@@ -3,6 +3,7 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { Crown, Trash2, Shield, Mail, ArrowUpRight, Search, Bell } from 'lucide-react'
 import { Layout } from '../../components/layout'
+import { InfoIcon } from '../../components/tooltip'
 import type { AdminLog, LogsPage } from '../../src/lib/api'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000'
@@ -65,10 +66,13 @@ export default function LogsPage({ data, page, action, search }: { data: LogsPag
             <input name="search" defaultValue={search} placeholder="Buscar nos detalhes..."
               className="w-full bg-ink-800 border border-white/8 rounded-xl pl-9 pr-4 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-600/60" />
           </div>
-          <select name="action" defaultValue={action}
-            className="bg-ink-800 border border-white/8 rounded-xl px-3 py-2 text-sm text-slate-300 focus:outline-none">
-            {ACTION_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
+          <div className="flex items-center gap-1.5">
+            <select name="action" defaultValue={action}
+              className="bg-ink-800 border border-white/8 rounded-xl px-3 py-2 text-sm text-slate-300 focus:outline-none">
+              {ACTION_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+            <InfoIcon text="Filtra por tipo de ação registrada: alteração de plano, deleção de conta, toggle de admin, envio de email ou push broadcast." position="bottom" />
+          </div>
           <button type="submit" className="bg-brand-600 hover:bg-brand-500 text-white font-medium px-4 py-2 rounded-xl text-sm transition-colors">
             Filtrar
           </button>
@@ -84,8 +88,15 @@ export default function LogsPage({ data, page, action, search }: { data: LogsPag
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/6">
-                  {['Ação', 'Detalhes', 'Data', ''].map(h => (
-                    <th key={h} className="text-left text-xs text-slate-500 font-medium px-5 py-3">{h}</th>
+                  {[
+                    { h: 'Ação',     tip: 'Tipo de operação realizada pelo admin' },
+                    { h: 'Detalhes', tip: 'Descrição completa da ação, incluindo o motivo quando aplicável' },
+                    { h: 'Data',     tip: '' },
+                    { h: '',         tip: '' },
+                  ].map(({ h, tip }, i) => (
+                    <th key={i} className="text-left text-xs text-slate-500 font-medium px-5 py-3">
+                      {h && <span className="flex items-center gap-1">{h}{tip && <InfoIcon text={tip} />}</span>}
+                    </th>
                   ))}
                 </tr>
               </thead>

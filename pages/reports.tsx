@@ -4,6 +4,7 @@ import Head from 'next/head'
 import { useState } from 'react'
 import { Users, DollarSign, UserMinus, BarChart2, Download } from 'lucide-react'
 import { Layout } from '../components/layout'
+import { InfoIcon } from '../components/tooltip'
 import type { ReportsData } from '../src/lib/api'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000'
@@ -84,13 +85,13 @@ function downloadCsv(filename: string, rows: (string | number)[][], headers: str
 
 type Tab = 'revenue' | 'acquisition' | 'churn' | 'usage' | 'cohort' | 'funnel'
 
-const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
-  { id: 'revenue',     label: 'Receita',    icon: DollarSign },
-  { id: 'acquisition', label: 'Aquisição',  icon: Users },
-  { id: 'churn',       label: 'Churn',      icon: UserMinus },
-  { id: 'usage',       label: 'Uso',        icon: BarChart2 },
-  { id: 'cohort',      label: 'Cohort',     icon: Users },
-  { id: 'funnel',      label: 'Funil',      icon: BarChart2 },
+const TABS: { id: Tab; label: string; icon: React.ElementType; tip: string }[] = [
+  { id: 'revenue',     label: 'Receita',    icon: DollarSign, tip: 'MRR, novos PRO Stripe vs Manual — evolução mensal nos últimos 12 meses' },
+  { id: 'acquisition', label: 'Aquisição',  icon: Users,      tip: 'Cadastros por mês e taxa de conversão Free → PRO' },
+  { id: 'churn',       label: 'Churn',      icon: UserMinus,  tip: 'Quantos usuários saíram do plano PRO (downgrade ou cancelamento) por mês' },
+  { id: 'usage',       label: 'Uso',        icon: BarChart2,  tip: 'Engajamento: médias de transações e metas, + top 10 usuários mais ativos' },
+  { id: 'cohort',      label: 'Cohort',     icon: Users,      tip: 'Retenção por coorte: de quem se cadastrou em cada mês, quantos ainda estão ativos?' },
+  { id: 'funnel',      label: 'Funil',      icon: BarChart2,  tip: 'Funil de ativação: Cadastro → Onboarding → Primeira transação → Primeira meta' },
 ]
 
 export default function ReportsPage({ data }: { data: ReportsData }) {
@@ -122,8 +123,9 @@ export default function ReportsPage({ data }: { data: ReportsData }) {
         {/* Tabs + export */}
         <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex gap-1 bg-ink-800 border border-white/6 rounded-xl p-1 w-fit">
-          {TABS.map(({ id, label, icon: Icon }) => (
+          {TABS.map(({ id, label, icon: Icon, tip }) => (
             <button key={id} onClick={() => setTab(id)}
+              title={tip}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 tab === id
                   ? 'bg-brand-800/60 text-brand-300 border border-brand-700/40'
@@ -150,17 +152,26 @@ export default function ReportsPage({ data }: { data: ReportsData }) {
           <div className="flex flex-col gap-6">
             <div className="grid grid-cols-3 gap-4">
               <div className="bg-ink-800 border border-white/6 rounded-2xl p-5">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">MRR Atual</p>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">MRR Atual</p>
+                  <InfoIcon text="Receita Mensal Recorrente do último mês: soma de todos os PRO × R$ 19,90" />
+                </div>
                 <p className="text-2xl font-bold text-success">{fmt(totalMrr)}</p>
                 <p className="text-xs text-slate-600 mt-1">receita mensal recorrente</p>
               </div>
               <div className="bg-ink-800 border border-white/6 rounded-2xl p-5">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Novos Stripe (12m)</p>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Novos Stripe (12m)</p>
+                  <InfoIcon text="Total de upgrades Free → PRO feitos via Stripe (pagamento com cartão) nos últimos 12 meses" />
+                </div>
                 <p className="text-2xl font-bold text-brand-300">{totalStripe}</p>
                 <p className="text-xs text-slate-600 mt-1">conversões via pagamento</p>
               </div>
               <div className="bg-ink-800 border border-white/6 rounded-2xl p-5">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Novos Manual (12m)</p>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Novos Manual (12m)</p>
+                  <InfoIcon text="Total de upgrades ativados pelo backoffice sem cobrança (gratuidades, parcerias, testes)" />
+                </div>
                 <p className="text-2xl font-bold text-amber-400">{totalManual}</p>
                 <p className="text-xs text-slate-600 mt-1">ativados pelo backoffice</p>
               </div>
