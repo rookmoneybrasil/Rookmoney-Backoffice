@@ -3,7 +3,7 @@ import Link from 'next/link'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { useState } from 'react'
-import { ArrowLeft, Crown, TrendingUp, TrendingDown, Shield, Trash2, Mail, ScrollText, Clock, UserCheck, StickyNote, RefreshCw, LogIn, Globe, Smartphone, MapPin, Briefcase, Calendar, MessageSquare, ScanLine, Bell, BellOff, Wallet, Activity } from 'lucide-react'
+import { ArrowLeft, Crown, TrendingUp, TrendingDown, Shield, Trash2, Mail, ScrollText, Clock, UserCheck, StickyNote, RefreshCw, LogIn, Globe, Smartphone, MapPin, Briefcase, Calendar, MessageSquare, ScanLine, Bell, BellOff, Wallet, Activity, AlertTriangle } from 'lucide-react'
 import { InfoIcon } from '../../components/tooltip'
 import { ConfirmModal } from '../../components/confirm-modal'
 import { Layout } from '../../components/layout'
@@ -576,9 +576,27 @@ export default function UserDetailPage({ data }: { data: UserDetail }) {
 
         {/* Stripe */}
         {user.stripeCustomerId && (
-          <div className="bg-ink-800 border border-white/6 rounded-xl p-4">
+          <div className={`bg-ink-800 border rounded-xl p-4 ${user.stripeCancelAtPeriodEnd ? 'border-danger/30' : 'border-white/6'}`}>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Stripe</p>
-            <p className="text-xs font-mono text-slate-400">Customer: <span className="text-slate-300">{user.stripeCustomerId}</span></p>
+            <div className="flex flex-col gap-1.5">
+              <p className="text-xs font-mono text-slate-400">Customer: <span className="text-slate-300">{user.stripeCustomerId}</span></p>
+              {user.stripeSubscriptionId && (
+                <p className="text-xs font-mono text-slate-400">Subscription: <span className="text-slate-300">{user.stripeSubscriptionId}</span></p>
+              )}
+              {user.stripeCancelAtPeriodEnd && (
+                <div className="flex items-center gap-2 mt-2 bg-danger/10 border border-danger/20 rounded-lg px-3 py-2">
+                  <AlertTriangle className="size-4 text-danger shrink-0" />
+                  <div>
+                    <p className="text-xs font-semibold text-danger">Cancelamento agendado</p>
+                    {user.stripeCurrentPeriodEnd && (
+                      <p className="text-[10px] text-slate-400 mt-0.5">
+                        PRO até {new Date(user.stripeCurrentPeriodEnd).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
 

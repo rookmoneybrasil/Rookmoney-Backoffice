@@ -160,6 +160,7 @@ export interface AppSettings {
 export interface AdminUser {
   id: string; name: string; email: string; plan: string; isAdmin: boolean
   createdAt: string; updatedAt: string; stripeSubscriptionId: string | null
+  stripeCancelAtPeriodEnd?: boolean; stripeCurrentPeriodEnd?: string | null
   lastActiveAt: string | null
   proPlanExpiresAt: string | null; proPlanReason: string | null; adminNotes: string | null
   loginMethod?: 'google' | 'email'
