@@ -36,10 +36,15 @@ const DURATION_LABELS: Record<string, string> = {
 }
 
 const ACTION_LABELS: Record<string, string> = {
-  plan_change:   '📋 Plano alterado',
-  delete_user:   '🗑️ Conta deletada',
-  toggle_admin:  '🛡️ Admin alterado',
-  send_email:    '✉️ Email enviado',
+  plan_change:              '📋 Plano alterado',
+  delete_user:              '🗑️ Conta deletada',
+  toggle_admin:             '🛡️ Admin alterado',
+  send_email:               '✉️ Email enviado',
+  stripe_upgrade:           '💳 Upgrade Stripe',
+  stripe_cancel_scheduled:  '⏳ Cancelamento agendado',
+  stripe_cancel_reversed:   '✅ Cancelamento revertido',
+  stripe_downgrade:         '📉 Downgrade Stripe',
+  stripe_payment_failed:    '⚠️ Falha no pagamento',
 }
 
 function daysUntil(iso: string | null): number | null {

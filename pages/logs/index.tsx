@@ -1,7 +1,7 @@
 import { GetServerSideProps } from 'next'
 import Head from 'next/head'
 import Link from 'next/link'
-import { Crown, Trash2, Shield, Mail, ArrowUpRight, Search, Bell } from 'lucide-react'
+import { Crown, Trash2, Shield, Mail, ArrowUpRight, Search, Bell, CreditCard, Clock, CheckCircle, TrendingDown, AlertTriangle } from 'lucide-react'
 import { Layout } from '../../components/layout'
 import { InfoIcon } from '../../components/tooltip'
 import type { AdminLog, LogsPage } from '../../src/lib/api'
@@ -26,28 +26,42 @@ export const getServerSideProps: GetServerSideProps = async ({ req, query }) => 
 }
 
 const ACTION_ICONS: Record<string, React.ReactNode> = {
-  plan_change:    <Crown  className="size-3.5 text-amber-400" />,
-  delete_user:    <Trash2 className="size-3.5 text-danger" />,
-  toggle_admin:   <Shield className="size-3.5 text-brand-400" />,
-  send_email:     <Mail   className="size-3.5 text-success" />,
-  push_broadcast: <Bell   className="size-3.5 text-brand-300" />,
+  plan_change:             <Crown        className="size-3.5 text-amber-400" />,
+  delete_user:             <Trash2       className="size-3.5 text-danger" />,
+  toggle_admin:            <Shield       className="size-3.5 text-brand-400" />,
+  send_email:              <Mail         className="size-3.5 text-success" />,
+  push_broadcast:          <Bell         className="size-3.5 text-brand-300" />,
+  stripe_upgrade:          <CreditCard   className="size-3.5 text-success" />,
+  stripe_cancel_scheduled: <Clock        className="size-3.5 text-warning" />,
+  stripe_cancel_reversed:  <CheckCircle  className="size-3.5 text-success" />,
+  stripe_downgrade:        <TrendingDown className="size-3.5 text-danger" />,
+  stripe_payment_failed:   <AlertTriangle className="size-3.5 text-danger" />,
 }
 
 const ACTION_LABELS: Record<string, string> = {
-  plan_change:    'Plano alterado',
-  delete_user:    'Conta deletada',
-  toggle_admin:   'Admin alterado',
-  send_email:     'Email enviado',
-  push_broadcast: 'Push broadcast',
+  plan_change:             'Plano alterado',
+  delete_user:             'Conta deletada',
+  toggle_admin:            'Admin alterado',
+  send_email:              'Email enviado',
+  push_broadcast:          'Push broadcast',
+  stripe_upgrade:          'Upgrade Stripe',
+  stripe_cancel_scheduled: 'Cancelamento agendado',
+  stripe_cancel_reversed:  'Cancelamento revertido',
+  stripe_downgrade:        'Downgrade Stripe',
+  stripe_payment_failed:   'Falha no pagamento',
 }
 
 const ACTION_OPTIONS = [
-  { value: '',               label: 'Todas as ações' },
-  { value: 'plan_change',    label: 'Plano alterado' },
-  { value: 'delete_user',    label: 'Conta deletada' },
-  { value: 'toggle_admin',   label: 'Admin alterado' },
-  { value: 'send_email',     label: 'Email enviado' },
-  { value: 'push_broadcast', label: 'Push broadcast' },
+  { value: '',                        label: 'Todas as ações' },
+  { value: 'plan_change',             label: 'Plano alterado' },
+  { value: 'delete_user',             label: 'Conta deletada' },
+  { value: 'toggle_admin',            label: 'Admin alterado' },
+  { value: 'send_email',              label: 'Email enviado' },
+  { value: 'push_broadcast',          label: 'Push broadcast' },
+  { value: 'stripe_upgrade',          label: 'Upgrade Stripe' },
+  { value: 'stripe_cancel_scheduled', label: 'Cancelamento agendado' },
+  { value: 'stripe_downgrade',        label: 'Downgrade Stripe' },
+  { value: 'stripe_payment_failed',   label: 'Falha no pagamento' },
 ]
 
 export default function LogsPage({ data, page, action, search }: { data: LogsPage; page: number; action: string; search: string }) {
