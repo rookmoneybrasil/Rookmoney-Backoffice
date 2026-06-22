@@ -242,9 +242,13 @@ export default function UserDetailPage({ data }: { data: UserDetail }) {
 
         {/* Header */}
         <div className="flex items-start gap-5 flex-wrap">
-          <div className="size-16 rounded-2xl bg-brand-800 border border-brand-700/50 flex items-center justify-center text-2xl font-bold text-brand-300 shrink-0">
-            {user.name[0].toUpperCase()}
-          </div>
+          {user.profileImage ? (
+            <img src={user.profileImage} alt="" className="size-16 rounded-2xl object-cover border border-brand-700/50 shrink-0" />
+          ) : (
+            <div className="size-16 rounded-2xl bg-brand-800 border border-brand-700/50 flex items-center justify-center text-2xl font-bold text-brand-300 shrink-0">
+              {user.name[0].toUpperCase()}
+            </div>
+          )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-2xl font-bold text-slate-100">{user.name}</h1>
