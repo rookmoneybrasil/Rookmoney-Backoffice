@@ -200,8 +200,17 @@ export default function UsersPage({ data, search, plan, inactive, page }: { data
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div className="size-8 rounded-full bg-brand-800 border border-brand-700/50 flex items-center justify-center text-xs font-bold text-brand-300 shrink-0">
-                        {u.name[0].toUpperCase()}
+                      <div className="relative shrink-0">
+                        {u.profileImage ? (
+                          <img src={u.profileImage} alt="" className="size-8 rounded-full object-cover border border-brand-700/50" />
+                        ) : (
+                          <div className="size-8 rounded-full bg-brand-800 border border-brand-700/50 flex items-center justify-center text-xs font-bold text-brand-300">
+                            {u.name[0].toUpperCase()}
+                          </div>
+                        )}
+                        {u.lastActiveAt && (Date.now() - new Date(u.lastActiveAt).getTime()) < 5 * 60_000 && (
+                          <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full bg-green-500 border-2 border-ink-800" />
+                        )}
                       </div>
                       <div>
                         <p className="font-medium text-slate-200">{u.name}</p>
