@@ -225,7 +225,7 @@ export default function Dashboard({ stats: s, growth: g, mrr: m }: { stats: Admi
             color="text-amber-400"
             tooltip="Usuários PRO e PRO+ ativos agora — inclui assinaturas Stripe e manuais." />
           <KPI label="MRR" value={fmt(s.mrr)} sub={`ARR: ${fmt(s.arr)}`} color="text-success"
-            tooltip="Receita Mensal Recorrente estimada: PRO × R$19,90 + PRO+ × R$34,90. ARR = MRR × 12."
+            tooltip="Receita Mensal Recorrente (só Stripe): PRO × R$19,90 + PRO+ × R$34,90. Manuais não contam. ARR = MRR × 12."
             badge={mrrTarget > 0 ? (
               <button onClick={() => { setTargetInput(String(mrrTarget)); setEditingTarget(true) }}
                 className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-slate-300 transition-colors">
