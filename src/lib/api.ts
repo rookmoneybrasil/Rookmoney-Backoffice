@@ -116,6 +116,7 @@ export interface AdminStats {
   newToday: number; newThisWeek: number; newThisMonth: number
   totalTransactions: number; transactionsThisMonth: number; totalGoals: number
   mrr: number; arr: number
+  proStripe: number; proPlusStripe: number
   openFeedbackCount: number
   newProThisMonth:      number
   churnThisMonth:       number
