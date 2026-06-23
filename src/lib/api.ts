@@ -111,15 +111,19 @@ export const api = {
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface AdminStats {
-  totalUsers: number; proUsers: number; proPlusUsers?: number; proManual: number; freeUsers: number; proRate: number
+  totalUsers: number; proUsers: number; freeUsers: number; proRate: number
   onlineUsers: number
   newToday: number; newThisWeek: number; newThisMonth: number
   totalTransactions: number; transactionsThisMonth: number; totalGoals: number
+  // PRO breakdown
+  proTotal: number; proStripe: number; proManual: number
+  mrrPro: number; convPro: number; churnPro: number
+  // PRO+ breakdown
+  proPlusTotal: number; proPlusStripe: number; proPlusManual: number
+  mrrProPlus: number; convProPlus: number; churnProPlus: number
+  // Totals
   mrr: number; arr: number
-  proStripe: number; proPlusStripe: number
   openFeedbackCount: number
-  newProThisMonth:      number
-  churnThisMonth:       number
   manualExpiringCount:  number
   growthVsLastMonth:    number | null
   recentFeedback: { id: string; type: string; title: string; createdAt: string; user: { name: string } }[]

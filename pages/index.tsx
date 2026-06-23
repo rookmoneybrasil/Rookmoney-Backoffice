@@ -49,6 +49,16 @@ function KPI({ label, value, sub, color = 'text-white', badge, tooltip }: { labe
   )
 }
 
+function SectionHeader({ title, icon, color }: { title: string; icon: React.ReactNode; color: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className={color}>{icon}</span>
+      <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider">{title}</h2>
+      <div className="flex-1 h-px bg-white/6" />
+    </div>
+  )
+}
+
 // ─── SVG Bar Chart ────────────────────────────────────────────────────────────
 
 function BarChart({ data, color, labelEvery = 1 }: {
@@ -65,7 +75,6 @@ function BarChart({ data, color, labelEvery = 1 }: {
   const gap  = W / n
 
   return (
-    // Wrapper with matching aspect ratio ensures x/y scale uniformly → no text distortion
     <div style={{ aspectRatio: `${W} / ${H + LABEL_H}` }}>
       <svg viewBox={`0 0 ${W} ${H + LABEL_H}`} className="w-full h-full" preserveAspectRatio="none">
         {data.map((d, i) => {
@@ -143,6 +152,8 @@ export default function Dashboard({ stats: s, growth: g, mrr: m }: { stats: Admi
     value: d.newPro,
   }))
 
+  const totalManual = s.proManual + s.proPlusManual
+
   return (
     <Layout openFeedbackCount={s.openFeedbackCount}>
       <Head><title>Visão geral — Rook Backoffice</title></Head>
@@ -207,60 +218,101 @@ export default function Dashboard({ stats: s, growth: g, mrr: m }: { stats: Admi
           </div>
         )}
 
-        {/* KPIs principais */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <KPI label="Total usuários" value={s.totalUsers.toLocaleString('pt-BR')} sub={`+${s.newToday} hoje`}
-            tooltip="Total de contas cadastradas (free + PRO). O % ao lado mostra crescimento vs o mês anterior."
-            badge={growth !== null && growth !== undefined ? (
-              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 ${
-                growth >= 0 ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'
-              }`}>
-                {growth >= 0 ? <TrendingUp className="size-2.5" /> : <TrendingDown className="size-2.5" />}
-                {Math.abs(growth)}%
-              </span>
-            ) : undefined}
-          />
-          <KPI label="Planos Pagos" value={s.proUsers.toLocaleString('pt-BR')}
-            sub={s.proPlusUsers ? `PRO: ${s.proUsers - (s.proPlusUsers ?? 0)} · PRO+: ${s.proPlusUsers} · ${s.proRate}% da base` : `${s.proRate}% da base`}
-            color="text-amber-400"
-            tooltip="Usuários PRO e PRO+ ativos agora — inclui assinaturas Stripe e manuais." />
-          <KPI label="MRR" value={fmt(s.mrr)} sub={`PRO: ${s.proStripe ?? 0} · PRO+: ${s.proPlusStripe ?? 0} (Stripe) · ARR: ${fmt(s.arr)}`} color="text-success"
-            tooltip="Receita Mensal Recorrente (só Stripe): PRO × R$19,90 + PRO+ × R$34,90. Manuais não contam. ARR = MRR × 12."
-            badge={mrrTarget > 0 ? (
-              <button onClick={() => { setTargetInput(String(mrrTarget)); setEditingTarget(true) }}
-                className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-slate-300 transition-colors">
-                <Target className="size-2.5" /> meta
-              </button>
-            ) : (
-              <button onClick={() => { setTargetInput(''); setEditingTarget(true) }}
-                className="text-[10px] text-slate-700 hover:text-slate-500 transition-colors">+ meta</button>
-            )}
-          />
-          <KPI label="Transações" value={s.totalTransactions.toLocaleString('pt-BR')} sub={`+${s.transactionsThisMonth} este mês`} color="text-brand-300"
-            tooltip="Total de transações registradas por todos os usuários (receitas + despesas)." />
+        {/* ═══════════════════ GERAL ═══════════════════ */}
+        <div className="flex flex-col gap-4">
+          <SectionHeader title="Geral" icon={<TrendingUp className="size-4" />} color="text-brand-400" />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <KPI label="Total usuários" value={s.totalUsers.toLocaleString('pt-BR')} sub={`+${s.newToday} hoje`}
+              tooltip="Total de contas cadastradas (free + PRO + PRO+)."
+              badge={growth !== null && growth !== undefined ? (
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 ${
+                  growth >= 0 ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'
+                }`}>
+                  {growth >= 0 ? <TrendingUp className="size-2.5" /> : <TrendingDown className="size-2.5" />}
+                  {Math.abs(growth)}%
+                </span>
+              ) : undefined}
+            />
+            <KPI label="Novos este mês" value={s.newThisMonth.toString()} sub="cadastros"
+              tooltip="Cadastros realizados no mês atual (do dia 1 até hoje)." />
+            <KPI label="Gratuitos" value={s.freeUsers.toLocaleString('pt-BR')} sub={`${100 - s.proRate}% da base`}
+              tooltip="Usuários no plano Free — potenciais conversões." />
+            <KPI label="Transações" value={s.totalTransactions.toLocaleString('pt-BR')} sub={`+${s.transactionsThisMonth} este mês`} color="text-brand-300"
+              tooltip="Total de transações registradas (receitas + despesas)." />
+          </div>
         </div>
 
-        {/* Métricas de negócio */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <KPI label="Novos este mês"  value={s.newThisMonth.toString()}     sub="cadastros"
-            tooltip="Cadastros realizados no mês atual (do dia 1 até hoje)." />
-          <KPI label="Gratuitos"       value={s.freeUsers.toLocaleString('pt-BR')} sub={`${100 - s.proRate}% da base`}
-            tooltip="Usuários no plano Free — potenciais conversões para PRO." />
-          <KPI label="Conversões PRO"  value={s.newProThisMonth?.toString() ?? '0'} sub="Free → PRO este mês" color="text-amber-400"
-            tooltip="Usuários que viraram PRO neste mês — seja via Stripe ou ativação manual." />
-          <KPI label="Churn este mês"  value={s.churnThisMonth?.toString()  ?? '0'} sub="PRO → Free este mês"
-            color={(s.churnThisMonth ?? 0) > 0 ? 'text-danger' : 'text-slate-300'}
-            tooltip="Usuários que voltaram para Free neste mês. Conta downgrades manuais e expirações automáticas." />
-          {(s.proManual ?? 0) > 0 && (
-            <Link href="/users?plan=PRO_MANUAL" title="PRO ativado pelo backoffice sem cobrança via Stripe — gratuidades, parcerias, testes" className="bg-ink-800 border border-amber-700/30 rounded-2xl p-5 flex flex-col gap-2 hover:bg-ink-700/60 transition-colors group">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">PRO Manual</p>
-                <UserCheck className="size-3.5 text-amber-500/60 group-hover:text-amber-400 transition-colors" />
-              </div>
-              <p className="text-2xl font-bold text-amber-500">{s.proManual}</p>
-              <p className="text-xs text-slate-600">ativados sem Stripe · ver lista →</p>
-            </Link>
-          )}
+        {/* ═══════════════════ PRO ═══════════════════ */}
+        <div className="flex flex-col gap-4">
+          <SectionHeader title="PRO" icon={<Crown className="size-4" />} color="text-amber-400" />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <KPI label="PRO Ativos" value={s.proTotal.toString()} color="text-amber-400"
+              sub={`Stripe: ${s.proStripe} · Manual: ${s.proManual}`}
+              tooltip="Usuários no plano PRO (R$19,90/mês)." />
+            <KPI label="MRR PRO" value={fmt(s.mrrPro)} color="text-success"
+              sub={`${s.proStripe} assinante${s.proStripe !== 1 ? 's' : ''} Stripe`}
+              tooltip="Receita mensal de assinantes PRO via Stripe. Manuais não contam."
+              badge={mrrTarget > 0 ? (
+                <button onClick={() => { setTargetInput(String(mrrTarget)); setEditingTarget(true) }}
+                  className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-slate-300 transition-colors">
+                  <Target className="size-2.5" /> meta
+                </button>
+              ) : undefined}
+            />
+            <KPI label="Conversões PRO" value={s.convPro.toString()} sub="→ PRO este mês" color="text-amber-400"
+              tooltip="Upgrades para PRO neste mês (Stripe + manual)." />
+            <KPI label="Churn PRO" value={s.churnPro.toString()} sub="PRO → Free este mês"
+              color={s.churnPro > 0 ? 'text-danger' : 'text-slate-300'}
+              tooltip="Downgrades de PRO para Free neste mês." />
+          </div>
+        </div>
+
+        {/* ═══════════════════ PRO+ ═══════════════════ */}
+        <div className="flex flex-col gap-4">
+          <SectionHeader title="PRO+" icon={<Sparkles className="size-4" />} color="text-violet-400" />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <KPI label="PRO+ Ativos" value={s.proPlusTotal.toString()} color="text-violet-400"
+              sub={`Stripe: ${s.proPlusStripe} · Manual: ${s.proPlusManual}`}
+              tooltip="Usuários no plano PRO+ (R$34,90/mês)." />
+            <KPI label="MRR PRO+" value={fmt(s.mrrProPlus)} color="text-success"
+              sub={`${s.proPlusStripe} assinante${s.proPlusStripe !== 1 ? 's' : ''} Stripe`}
+              tooltip="Receita mensal de assinantes PRO+ via Stripe. Manuais não contam." />
+            <KPI label="Conversões PRO+" value={s.convProPlus.toString()} sub="→ PRO+ este mês" color="text-violet-400"
+              tooltip="Upgrades para PRO+ neste mês (Stripe + manual)." />
+            <KPI label="Churn PRO+" value={s.churnProPlus.toString()} sub="PRO+ → Free este mês"
+              color={s.churnProPlus > 0 ? 'text-danger' : 'text-slate-300'}
+              tooltip="Downgrades de PRO+ para Free neste mês." />
+          </div>
+        </div>
+
+        {/* ═══════════════════ RECEITA TOTAL ═══════════════════ */}
+        <div className="flex flex-col gap-4">
+          <SectionHeader title="Receita" icon={<Target className="size-4" />} color="text-success" />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <KPI label="MRR Total" value={fmt(s.mrr)} color="text-success"
+              sub={`PRO: ${fmt(s.mrrPro)} + PRO+: ${fmt(s.mrrProPlus)}`}
+              tooltip="Receita Mensal Recorrente total (só Stripe). ARR = MRR × 12."
+              badge={!mrrTarget ? (
+                <button onClick={() => { setTargetInput(''); setEditingTarget(true) }}
+                  className="text-[10px] text-slate-700 hover:text-slate-500 transition-colors">+ meta</button>
+              ) : undefined}
+            />
+            <KPI label="ARR" value={fmt(s.arr)} color="text-success"
+              sub="MRR × 12" tooltip="Receita Anual Recorrente projetada." />
+            <KPI label="Planos Pagos" value={s.proUsers.toString()} color="text-amber-400"
+              sub={`${s.proRate}% da base · ${s.proUsers - totalManual} Stripe · ${totalManual} manual`}
+              tooltip="Total de usuários PRO + PRO+ ativos." />
+            {totalManual > 0 && (
+              <Link href="/users?plan=PRO_MANUAL" title="PRO ativado pelo backoffice sem Stripe" className="bg-ink-800 border border-amber-700/30 rounded-2xl p-5 flex flex-col gap-2 hover:bg-ink-700/60 transition-colors group">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">PRO Manual</p>
+                  <UserCheck className="size-3.5 text-amber-500/60 group-hover:text-amber-400 transition-colors" />
+                </div>
+                <p className="text-2xl font-bold text-amber-500">{totalManual}</p>
+                <p className="text-xs text-slate-600">ativados sem Stripe · ver lista →</p>
+              </Link>
+            )}
+          </div>
         </div>
 
         {/* Gráficos de crescimento */}
@@ -320,8 +372,8 @@ export default function Dashboard({ stats: s, growth: g, mrr: m }: { stats: Admi
                       </td>
                       <td className="px-4 py-2.5">
                         <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
-                          u.plan === 'PRO_PLUS' ? 'bg-amber-900/60 text-amber-300 border border-amber-600/50' :
-                          u.plan === 'PRO' ? 'bg-brand-900/60 text-brand-400 border border-brand-700/40' :
+                          u.plan === 'PRO_PLUS' ? 'bg-violet-900/60 text-violet-300 border border-violet-600/50' :
+                          u.plan === 'PRO' ? 'bg-amber-900/60 text-amber-300 border border-amber-600/40' :
                           'bg-ink-700 text-slate-500 border border-white/6'
                         }`}>
                           {u.plan === 'PRO_PLUS' && <Sparkles className="size-3" />}
@@ -353,7 +405,7 @@ export default function Dashboard({ stats: s, growth: g, mrr: m }: { stats: Admi
               </div>
               <div className="bg-ink-800 border border-white/6 rounded-2xl divide-y divide-white/5">
                 {!s.recentFeedback?.length ? (
-                  <p className="text-xs text-slate-600 text-center py-5">Nenhum feedback aberto 🎉</p>
+                  <p className="text-xs text-slate-600 text-center py-5">Nenhum feedback aberto</p>
                 ) : s.recentFeedback.map((f: { id: string; type: string; title: string; createdAt: string; user: { name: string } }) => (
                   <Link key={f.id} href={`/feedback`}
                     className="flex items-start gap-2.5 px-4 py-3 hover:bg-ink-700/40 transition-colors">
