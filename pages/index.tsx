@@ -1,7 +1,7 @@
 import { GetServerSideProps } from 'next'
 import Link from 'next/link'
 import Head from 'next/head'
-import { Bug, Lightbulb, Ticket, TrendingUp, TrendingDown, ArrowUpRight, UserCheck, Clock, Target } from 'lucide-react'
+import { Bug, Lightbulb, Ticket, TrendingUp, TrendingDown, ArrowUpRight, UserCheck, Clock, Target, Crown, Sparkles } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { Layout } from '../components/layout'
 import { InfoIcon } from '../components/tooltip'
@@ -220,10 +220,12 @@ export default function Dashboard({ stats: s, growth: g, mrr: m }: { stats: Admi
               </span>
             ) : undefined}
           />
-          <KPI label="Plano Pro" value={s.proUsers.toLocaleString('pt-BR')} sub={`${s.proRate}% da base`} color="text-amber-400"
-            tooltip="Usuários PRO ativos agora — inclui assinaturas Stripe e PRO manual." />
+          <KPI label="Planos Pagos" value={s.proUsers.toLocaleString('pt-BR')}
+            sub={s.proPlusUsers ? `PRO: ${s.proUsers - (s.proPlusUsers ?? 0)} · PRO+: ${s.proPlusUsers} · ${s.proRate}% da base` : `${s.proRate}% da base`}
+            color="text-amber-400"
+            tooltip="Usuários PRO e PRO+ ativos agora — inclui assinaturas Stripe e manuais." />
           <KPI label="MRR" value={fmt(s.mrr)} sub={`ARR: ${fmt(s.arr)}`} color="text-success"
-            tooltip="Receita Mensal Recorrente estimada: total PRO × R$ 19,90. ARR = MRR × 12."
+            tooltip="Receita Mensal Recorrente estimada: PRO × R$19,90 + PRO+ × R$34,90. ARR = MRR × 12."
             badge={mrrTarget > 0 ? (
               <button onClick={() => { setTargetInput(String(mrrTarget)); setEditingTarget(true) }}
                 className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-slate-300 transition-colors">
@@ -317,7 +319,15 @@ export default function Dashboard({ stats: s, growth: g, mrr: m }: { stats: Admi
                         </div>
                       </td>
                       <td className="px-4 py-2.5">
-                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${u.plan === 'PRO' ? 'bg-amber-900/60 text-amber-400 border border-amber-700/40' : 'bg-ink-700 text-slate-500 border border-white/6'}`}>{u.plan}</span>
+                        <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
+                          u.plan === 'PRO_PLUS' ? 'bg-amber-900/60 text-amber-300 border border-amber-600/50' :
+                          u.plan === 'PRO' ? 'bg-brand-900/60 text-brand-400 border border-brand-700/40' :
+                          'bg-ink-700 text-slate-500 border border-white/6'
+                        }`}>
+                          {u.plan === 'PRO_PLUS' && <Sparkles className="size-3" />}
+                          {u.plan === 'PRO' && <Crown className="size-3" />}
+                          {u.plan === 'PRO_PLUS' ? 'PRO+' : u.plan}
+                        </span>
                       </td>
                       <td className="px-4 py-2.5 text-slate-600 text-xs">{new Date(u.createdAt).toLocaleDateString('pt-BR')}</td>
                     </tr>

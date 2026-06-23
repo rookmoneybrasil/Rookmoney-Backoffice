@@ -2,7 +2,7 @@ import { GetServerSideProps } from 'next'
 import Link from 'next/link'
 import Head from 'next/head'
 import { useState } from 'react'
-import { Users, DollarSign, UserMinus, BarChart2, Download } from 'lucide-react'
+import { Users, DollarSign, UserMinus, BarChart2, Download, Crown, Sparkles } from 'lucide-react'
 import { Layout } from '../components/layout'
 import { InfoIcon } from '../components/tooltip'
 import type { ReportsData } from '../src/lib/api'
@@ -88,7 +88,7 @@ type Tab = 'revenue' | 'acquisition' | 'churn' | 'usage' | 'cohort' | 'funnel'
 const TABS: { id: Tab; label: string; icon: React.ElementType; tip: string }[] = [
   { id: 'revenue',     label: 'Receita',    icon: DollarSign, tip: 'MRR, novos PRO Stripe vs Manual — evolução mensal nos últimos 12 meses' },
   { id: 'acquisition', label: 'Aquisição',  icon: Users,      tip: 'Cadastros por mês e taxa de conversão Free → PRO' },
-  { id: 'churn',       label: 'Churn',      icon: UserMinus,  tip: 'Quantos usuários saíram do plano PRO (downgrade ou cancelamento) por mês' },
+  { id: 'churn',       label: 'Churn',      icon: UserMinus,  tip: 'Quantos usuários saíram de planos pagos PRO/PRO+ (downgrade ou cancelamento) por mês' },
   { id: 'usage',       label: 'Uso',        icon: BarChart2,  tip: 'Engajamento: médias de transações e metas, + top 10 usuários mais ativos' },
   { id: 'cohort',      label: 'Cohort',     icon: Users,      tip: 'Retenção por coorte: de quem se cadastrou em cada mês, quantos ainda estão ativos?' },
   { id: 'funnel',      label: 'Funil',      icon: BarChart2,  tip: 'Funil de ativação: Cadastro → Onboarding → Primeira transação → Primeira meta' },
@@ -154,7 +154,7 @@ export default function ReportsPage({ data }: { data: ReportsData }) {
               <div className="bg-ink-800 border border-white/6 rounded-2xl p-5">
                 <div className="flex items-center gap-1.5 mb-2">
                   <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">MRR Atual</p>
-                  <InfoIcon text="Receita Mensal Recorrente do último mês: soma de todos os PRO × R$ 19,90" />
+                  <InfoIcon text="Receita Mensal Recorrente do último mês: PRO × R$19,90 + PRO+ × R$34,90" />
                 </div>
                 <p className="text-2xl font-bold text-success">{fmt(totalMrr)}</p>
                 <p className="text-xs text-slate-600 mt-1">receita mensal recorrente</p>
@@ -293,7 +293,7 @@ export default function ReportsPage({ data }: { data: ReportsData }) {
               <div className="bg-ink-800 border border-white/6 rounded-2xl p-5">
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Total Churn (12m)</p>
                 <p className={`text-2xl font-bold ${totalChurn > 0 ? 'text-danger' : 'text-success'}`}>{totalChurn}</p>
-                <p className="text-xs text-slate-600 mt-1">downgrade PRO → Free</p>
+                <p className="text-xs text-slate-600 mt-1">downgrade PRO/PRO+ → Free</p>
               </div>
               <div className="bg-ink-800 border border-white/6 rounded-2xl p-5">
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Pior Mês</p>
@@ -310,7 +310,7 @@ export default function ReportsPage({ data }: { data: ReportsData }) {
             </div>
 
             <div className="bg-ink-800 border border-white/6 rounded-2xl p-5 flex flex-col gap-4">
-              <h2 className="text-sm font-semibold text-slate-300">Churn mensal (downgrade PRO → Free)</h2>
+              <h2 className="text-sm font-semibold text-slate-300">Churn mensal (downgrade PRO/PRO+ → Free)</h2>
               <BarChart
                 series={data.churn.map(r => [{ label: shortMonth(r.month), value: r.churn, color: '#EF4444' }])}
                 labelEvery={1}

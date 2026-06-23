@@ -2,7 +2,7 @@ import { GetServerSideProps } from 'next'
 import Link from 'next/link'
 import Head from 'next/head'
 import { useState } from 'react'
-import { Crown, ArrowUpRight, Search, Download, UserCheck, Mail, X, CheckSquare, Square } from 'lucide-react'
+import { Crown, Sparkles, ArrowUpRight, Search, Download, UserCheck, Mail, X, CheckSquare, Square } from 'lucide-react'
 import { Layout } from '../../components/layout'
 import { InfoIcon } from '../../components/tooltip'
 import { api, type UsersPage, type AdminUser } from '../../src/lib/api'
@@ -140,10 +140,11 @@ export default function UsersPage({ data, search, plan, inactive, page }: { data
               className="bg-ink-800 border border-white/8 rounded-xl px-3 py-2 text-sm text-slate-300 focus:outline-none">
               <option value="">Todos os planos</option>
               <option value="PRO">Pro (Stripe)</option>
+              <option value="PRO_PLUS">Pro+ (Stripe)</option>
               <option value="PRO_MANUAL">Pro Manual</option>
               <option value="FREE">Gratuito</option>
             </select>
-            <InfoIcon text="PRO (Stripe) = assinatura paga por cartão. PRO Manual = ativado pelo backoffice sem cobrança." position="bottom" />
+            <InfoIcon text="PRO (Stripe) = R$19,90/mês. PRO+ (Stripe) = R$34,90/mês. PRO Manual = ativado pelo backoffice sem cobrança." position="bottom" />
           </div>
           <div className="flex items-center gap-1.5">
             <select name="inactive" defaultValue={inactive}
@@ -175,7 +176,7 @@ export default function UsersPage({ data, search, plan, inactive, page }: { data
                 {[
                   { h: 'Usuário',    tip: '' },
                   { h: 'E-mail',     tip: '' },
-                  { h: 'Plano',      tip: 'FREE = gratuito. PRO = acesso completo. "manual" = ativado pelo backoffice sem Stripe.' },
+                  { h: 'Plano',      tip: 'FREE = gratuito. PRO = R$19,90/mês. PRO+ = R$34,90/mês. "manual" = ativado pelo backoffice sem Stripe.' },
                   { h: 'Transações', tip: 'Total de transações (receitas + despesas) registradas pelo usuário' },
                   { h: 'Metas',      tip: 'Número de metas de poupança criadas' },
                   { h: 'Cadastro',   tip: 'Data em que o usuário criou a conta' },
@@ -222,11 +223,15 @@ export default function UsersPage({ data, search, plan, inactive, page }: { data
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5">
                       <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
-                        u.plan === 'PRO' ? 'bg-amber-900/60 text-amber-400 border border-amber-700/40' : 'bg-ink-700 text-slate-500 border border-white/6'
+                        u.plan === 'PRO_PLUS' ? 'bg-amber-900/60 text-amber-300 border border-amber-600/50' :
+                        u.plan === 'PRO' ? 'bg-brand-900/60 text-brand-400 border border-brand-700/40' :
+                        'bg-ink-700 text-slate-500 border border-white/6'
                       }`}>
-                        {u.plan === 'PRO' && <Crown className="size-3" />}{u.plan}
+                        {u.plan === 'PRO_PLUS' && <Sparkles className="size-3" />}
+                        {u.plan === 'PRO' && <Crown className="size-3" />}
+                        {u.plan === 'PRO_PLUS' ? 'PRO+' : u.plan}
                       </span>
-                      {u.plan === 'PRO' && !u.stripeSubscriptionId && (
+                      {(u.plan === 'PRO' || u.plan === 'PRO_PLUS') && !u.stripeSubscriptionId && (
                         <span title="Ativado manualmente" className="inline-flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-slate-700/60 text-slate-400 border border-white/8">
                           <UserCheck className="size-2.5" /> manual
                         </span>

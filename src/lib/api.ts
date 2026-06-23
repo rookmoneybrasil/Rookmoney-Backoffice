@@ -43,8 +43,12 @@ export const api = {
   user:         (id: string) => req<UserDetail>(`/admin/users/${id}`),
   setManualPro: (id: string, duration: '3m' | '6m' | '12m' | 'lifetime', reason: string) =>
     req(`/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify({ plan: 'PRO', duration, reason }) }),
+  setManualProPlus: (id: string, duration: '3m' | '6m' | '12m' | 'lifetime', reason: string) =>
+    req(`/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify({ plan: 'PRO_PLUS', duration, reason }) }),
   setPlanFree:  (id: string) =>
     req(`/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify({ plan: 'FREE' }) }),
+  setPlanPro:   (id: string) =>
+    req(`/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify({ plan: 'PRO' }) }),
   setAdmin:     (id: string, isAdmin: boolean) =>
     req(`/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify({ isAdmin }) }),
   deleteUser:      (id: string) => req(`/admin/users/${id}`, { method: 'DELETE' }),
@@ -107,7 +111,7 @@ export const api = {
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface AdminStats {
-  totalUsers: number; proUsers: number; proManual: number; freeUsers: number; proRate: number
+  totalUsers: number; proUsers: number; proPlusUsers?: number; proManual: number; freeUsers: number; proRate: number
   onlineUsers: number
   newToday: number; newThisWeek: number; newThisMonth: number
   totalTransactions: number; transactionsThisMonth: number; totalGoals: number

@@ -3,7 +3,7 @@ import Link from 'next/link'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { useState } from 'react'
-import { ArrowLeft, Crown, TrendingUp, TrendingDown, Shield, Trash2, Mail, ScrollText, Clock, UserCheck, StickyNote, RefreshCw, LogIn, Globe, Smartphone, MapPin, Briefcase, Calendar, MessageSquare, ScanLine, Bell, BellOff, Wallet, Activity, AlertTriangle } from 'lucide-react'
+import { ArrowLeft, Crown, Sparkles, TrendingUp, TrendingDown, Shield, Trash2, Mail, ScrollText, Clock, UserCheck, StickyNote, RefreshCw, LogIn, Globe, Smartphone, MapPin, Briefcase, Calendar, MessageSquare, ScanLine, Bell, BellOff, Wallet, Activity, AlertTriangle } from 'lucide-react'
 import { InfoIcon } from '../../components/tooltip'
 import { ConfirmModal } from '../../components/confirm-modal'
 import { Layout } from '../../components/layout'
@@ -90,11 +90,15 @@ export default function UserDetailPage({ data }: { data: UserDetail }) {
   const [showEmail, setShowEmail]       = useState(false)
   const [showProModal, setShowProModal] = useState(false)
   const [duration, setDuration]         = useState<'3m' | '6m' | '12m' | 'lifetime'>('3m')
+  const [targetPlan, setTargetPlan]     = useState<'PRO' | 'PRO_PLUS'>('PRO')
   const [reason, setReason]             = useState('')
   const [notes, setNotes]               = useState(user.adminNotes ?? '')
   const [notesSaved, setNotesSaved]     = useState(false)
 
-  const isManualPro = user.plan === 'PRO' && !user.stripeSubscriptionId
+  const isManualPro = (user.plan === 'PRO' || user.plan === 'PRO_PLUS') && !user.stripeSubscriptionId
+  const isPro = user.plan === 'PRO'
+  const isProPlus = user.plan === 'PRO_PLUS'
+  const isPaid = isPro || isProPlus
 
   function calcExpiry(dur: string): string {
     if (dur === 'lifetime') return 'Sem expiração'
@@ -108,7 +112,11 @@ export default function UserDetailPage({ data }: { data: UserDetail }) {
     if (!reason.trim()) return
     setLoading('plan')
     try {
-      await api.setManualPro(user.id, duration, reason.trim())
+      if (targetPlan === 'PRO_PLUS') {
+        await api.setManualProPlus(user.id, duration, reason.trim())
+      } else {
+        await api.setManualPro(user.id, duration, reason.trim())
+      }
       setShowProModal(false)
       setReason('')
       router.replace(router.asPath)
@@ -129,12 +137,27 @@ export default function UserDetailPage({ data }: { data: UserDetail }) {
   function demoteFree() {
     setConfirm({
       title:        'Rebaixar para Free',
-      message:      `Remover o plano PRO de ${user.name}? O usuário perderá acesso imediatamente.`,
+      message:      `Remover o plano ${isProPlus ? 'PRO+' : 'PRO'} de ${user.name}? O usuário perderá acesso imediatamente.`,
       confirmLabel: 'Rebaixar para Free',
       variant:      'warning',
       action: async () => {
         setLoading('plan')
         try { await api.setPlanFree(user.id); router.replace(router.asPath) }
+        catch (e) { alert(e instanceof Error ? e.message : 'Erro') }
+        finally { setLoading(null) }
+      },
+    })
+  }
+
+  function demoteToPro() {
+    setConfirm({
+      title:        'Rebaixar para PRO',
+      message:      `Rebaixar ${user.name} de PRO+ para PRO? O usuário perderá acesso aos recursos exclusivos do PRO+.`,
+      confirmLabel: 'Rebaixar para PRO',
+      variant:      'warning',
+      action: async () => {
+        setLoading('plan')
+        try { await api.setPlanPro(user.id); router.replace(router.asPath) }
         catch (e) { alert(e instanceof Error ? e.message : 'Erro') }
         finally { setLoading(null) }
       },
@@ -253,9 +276,13 @@ export default function UserDetailPage({ data }: { data: UserDetail }) {
             <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-2xl font-bold text-slate-100">{user.name}</h1>
               <span className={`text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 ${
-                user.plan === 'PRO' ? 'bg-amber-900/60 text-amber-400 border border-amber-700/40' : 'bg-ink-700 text-slate-500 border border-white/8'
+                isProPlus ? 'bg-amber-900/60 text-amber-300 border border-amber-600/50' :
+                isPro ? 'bg-brand-900/60 text-brand-400 border border-brand-700/40' :
+                'bg-ink-700 text-slate-500 border border-white/8'
               }`}>
-                {user.plan === 'PRO' && <Crown className="size-3" />} {user.plan}
+                {isProPlus && <Sparkles className="size-3" />}
+                {isPro && <Crown className="size-3" />}
+                {isProPlus ? 'PRO+' : user.plan}
                 {isManualPro && <UserCheck className="size-3" />}
               </span>
               {user.isAdmin && <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-red-900/30 text-red-400 border border-red-700/30">ADMIN</span>}
@@ -277,7 +304,8 @@ export default function UserDetailPage({ data }: { data: UserDetail }) {
                   </span>
                 ) : (
                   <span className="text-xs text-amber-400 flex items-center gap-1.5">
-                    <Crown className="size-3" /> PRO vitalício
+                    {isProPlus ? <Sparkles className="size-3" /> : <Crown className="size-3" />}
+                    {isProPlus ? 'PRO+ vitalício' : 'PRO vitalício'}
                   </span>
                 )}
                 {user.proPlanReason && (
@@ -362,27 +390,48 @@ export default function UserDetailPage({ data }: { data: UserDetail }) {
 
         {/* Actions */}
         <div className="flex flex-wrap gap-3">
-          {user.plan === 'PRO' ? (
+          {isPaid ? (
             <>
               {isManualPro && (
                 <button onClick={() => setShowProModal(true)} disabled={!!loading}
-                  title="Estende a data de expiração do PRO manual — mantém o motivo original no histórico"
+                  title={`Estende a data de expiração do ${isProPlus ? 'PRO+' : 'PRO'} manual — mantém o motivo original no histórico`}
                   className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-amber-900/40 hover:bg-amber-800/50 border border-amber-700/30 text-amber-400 transition-colors disabled:opacity-50">
-                  <RefreshCw className="size-4" /> Prorrogar PRO
+                  <RefreshCw className="size-4" /> Prorrogar {isProPlus ? 'PRO+' : 'PRO'}
+                </button>
+              )}
+              {isPro && (
+                <button onClick={() => { setTargetPlan('PRO_PLUS'); setShowProModal(true) }} disabled={!!loading}
+                  title="Promove para PRO+ Manual (R$34,90/mês). Você precisa informar a duração e o motivo."
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-amber-900/60 hover:bg-amber-800/60 border border-amber-600/40 text-amber-300 transition-colors disabled:opacity-50">
+                  <Sparkles className="size-4" /> Upgrade para PRO+
+                </button>
+              )}
+              {isProPlus && (
+                <button onClick={demoteToPro} disabled={!!loading}
+                  title="Rebaixa para PRO (R$19,90/mês). O usuário perde acesso aos recursos exclusivos do PRO+."
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-ink-700 hover:bg-ink-600 border border-white/8 text-slate-300 transition-colors disabled:opacity-50">
+                  <Crown className="size-4" />{loading === 'plan' ? '...' : 'Rebaixar para PRO'}
                 </button>
               )}
               <button onClick={demoteFree} disabled={!!loading}
-                title="Remove o acesso PRO imediatamente. O usuário volta para o plano Free."
+                title={`Remove o acesso ${isProPlus ? 'PRO+' : 'PRO'} imediatamente. O usuário volta para o plano Free.`}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-ink-700 hover:bg-ink-600 border border-white/8 text-slate-300 transition-colors disabled:opacity-50">
                 <Crown className="size-4" />{loading === 'plan' ? '...' : 'Rebaixar para Free'}
               </button>
             </>
           ) : (
-            <button onClick={() => setShowProModal(true)} disabled={!!loading}
-              title="Dá acesso PRO sem cobrança. Você precisa informar a duração e o motivo (fica registrado no log)."
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-amber-900/60 hover:bg-amber-800/60 border border-amber-700/40 text-amber-300 transition-colors disabled:opacity-50">
-              <Crown className="size-4" /> Promover para PRO Manual
-            </button>
+            <div className="flex gap-2">
+              <button onClick={() => { setTargetPlan('PRO'); setShowProModal(true) }} disabled={!!loading}
+                title="Dá acesso PRO (R$19,90/mês) sem cobrança. Você precisa informar a duração e o motivo (fica registrado no log)."
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-brand-800/60 hover:bg-brand-700/60 border border-brand-700/40 text-brand-300 transition-colors disabled:opacity-50">
+                <Crown className="size-4" /> Promover para PRO Manual
+              </button>
+              <button onClick={() => { setTargetPlan('PRO_PLUS'); setShowProModal(true) }} disabled={!!loading}
+                title="Dá acesso PRO+ (R$34,90/mês) sem cobrança. Você precisa informar a duração e o motivo (fica registrado no log)."
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-amber-900/60 hover:bg-amber-800/60 border border-amber-600/40 text-amber-300 transition-colors disabled:opacity-50">
+                <Sparkles className="size-4" /> Promover para PRO+ Manual
+              </button>
+            </div>
           )}
           <button onClick={() => setShowEmail(v => !v)} disabled={!!loading}
             title="Envia um email diretamente para este usuário via Resend"
@@ -410,7 +459,10 @@ export default function UserDetailPage({ data }: { data: UserDetail }) {
         {showProModal && (
           <div className="bg-ink-800 border border-amber-700/30 rounded-2xl p-5 flex flex-col gap-4">
             <p className="text-sm font-semibold text-amber-300 flex items-center gap-2">
-              <Crown className="size-4" /> Promover {user.name} para PRO Manual
+              {targetPlan === 'PRO_PLUS' ? <Sparkles className="size-4" /> : <Crown className="size-4" />}
+              {isManualPro
+                ? `Prorrogar ${isProPlus ? 'PRO+' : 'PRO'} Manual de ${user.name}`
+                : `Promover ${user.name} para ${targetPlan === 'PRO_PLUS' ? 'PRO+' : 'PRO'} Manual`}
             </p>
 
             <div className="grid grid-cols-2 gap-3">
@@ -445,7 +497,7 @@ export default function UserDetailPage({ data }: { data: UserDetail }) {
               <button onClick={promoteManualPro}
                 disabled={loading === 'plan' || !reason.trim()}
                 className="px-4 py-2 rounded-lg text-sm font-medium bg-amber-600 hover:bg-amber-500 text-white transition-colors disabled:opacity-50">
-                {loading === 'plan' ? 'Salvando...' : `Confirmar PRO ${DURATION_LABELS[duration]}`}
+                {loading === 'plan' ? 'Salvando...' : `Confirmar ${targetPlan === 'PRO_PLUS' ? 'PRO+' : 'PRO'} ${DURATION_LABELS[duration]}`}
               </button>
               <button onClick={() => { setShowProModal(false); setReason('') }}
                 className="px-4 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-200 transition-colors">
@@ -599,7 +651,7 @@ export default function UserDetailPage({ data }: { data: UserDetail }) {
                     <p className="text-xs font-semibold text-danger">Cancelamento agendado</p>
                     {user.stripeCurrentPeriodEnd && (
                       <p className="text-[10px] text-slate-400 mt-0.5">
-                        PRO até {new Date(user.stripeCurrentPeriodEnd).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                        {isProPlus ? 'PRO+' : 'PRO'} até {new Date(user.stripeCurrentPeriodEnd).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
                       </p>
                     )}
                   </div>
