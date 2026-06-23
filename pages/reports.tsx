@@ -86,8 +86,8 @@ function downloadCsv(filename: string, rows: (string | number)[][], headers: str
 type Tab = 'revenue' | 'acquisition' | 'churn' | 'usage' | 'cohort' | 'funnel'
 
 const TABS: { id: Tab; label: string; icon: React.ElementType; tip: string }[] = [
-  { id: 'revenue',     label: 'Receita',    icon: DollarSign, tip: 'MRR, novos PRO Stripe vs Manual — evolução mensal nos últimos 12 meses' },
-  { id: 'acquisition', label: 'Aquisição',  icon: Users,      tip: 'Cadastros por mês e taxa de conversão Free → PRO' },
+  { id: 'revenue',     label: 'Receita',    icon: DollarSign, tip: 'MRR, novos PRO/PRO+ Stripe vs Manual — evolução mensal nos últimos 12 meses' },
+  { id: 'acquisition', label: 'Aquisição',  icon: Users,      tip: 'Cadastros por mês e taxa de conversão Free → PRO/PRO+' },
   { id: 'churn',       label: 'Churn',      icon: UserMinus,  tip: 'Quantos usuários saíram de planos pagos PRO/PRO+ (downgrade ou cancelamento) por mês' },
   { id: 'usage',       label: 'Uso',        icon: BarChart2,  tip: 'Engajamento: médias de transações e metas, + top 10 usuários mais ativos' },
   { id: 'cohort',      label: 'Cohort',     icon: Users,      tip: 'Retenção por coorte: de quem se cadastrou em cada mês, quantos ainda estão ativos?' },
@@ -137,7 +137,7 @@ export default function ReportsPage({ data }: { data: ReportsData }) {
         </div>
         <button onClick={() => {
           if (tab === 'revenue')     downloadCsv('receita.csv', data.revenue.map(r => [shortMonth(r.month), r.stripeNew, r.manualNew, fmt(r.mrrStripe), fmt(r.mrrManual), fmt(r.mrr)]), ['Mês','Novos Stripe','Novos Manual','MRR Stripe','MRR Manual','MRR Total'])
-          else if (tab === 'acquisition') downloadCsv('aquisicao.csv', data.acquisition.map(r => [shortMonth(r.month), r.signups, r.newPro, r.conversionRate + '%']), ['Mês','Cadastros','Novos PRO','Conversão'])
+          else if (tab === 'acquisition') downloadCsv('aquisicao.csv', data.acquisition.map(r => [shortMonth(r.month), r.signups, r.newPro, r.conversionRate + '%']), ['Mês','Cadastros','Novos PRO/PRO+','Conversão'])
           else if (tab === 'churn')  downloadCsv('churn.csv', data.churn.map(r => [shortMonth(r.month), r.churn]), ['Mês','Churn'])
           else if (tab === 'cohort') downloadCsv('cohort.csv', (data.cohort ?? []).map(r => [shortMonth(r.cohortMonth), r.total, r.active30d, r.retentionRate + '%']), ['Mês de Cadastro','Usuários','Ativos 30d','Retenção'])
           else if (tab === 'funnel') downloadCsv('funil.csv', [['Total','Onboarded','Com Transações','Com Metas'],[data.funnel?.totalUsers,data.funnel?.onboarded,data.funnel?.hasTransactions,data.funnel?.hasGoals].map(String)], ['Etapa','Qtd'])
@@ -162,7 +162,7 @@ export default function ReportsPage({ data }: { data: ReportsData }) {
               <div className="bg-ink-800 border border-white/6 rounded-2xl p-5">
                 <div className="flex items-center gap-1.5 mb-2">
                   <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Novos Stripe (12m)</p>
-                  <InfoIcon text="Total de upgrades Free → PRO feitos via Stripe (pagamento com cartão) nos últimos 12 meses" />
+                  <InfoIcon text="Total de upgrades Free → PRO/PRO+ feitos via Stripe (pagamento com cartão) nos últimos 12 meses" />
                 </div>
                 <p className="text-2xl font-bold text-brand-300">{totalStripe}</p>
                 <p className="text-xs text-slate-600 mt-1">conversões via pagamento</p>
@@ -179,7 +179,7 @@ export default function ReportsPage({ data }: { data: ReportsData }) {
 
             <div className="bg-ink-800 border border-white/6 rounded-2xl p-5 flex flex-col gap-4">
               <div className="flex items-center gap-4">
-                <h2 className="text-sm font-semibold text-slate-300 flex-1">Novos PRO por mês</h2>
+                <h2 className="text-sm font-semibold text-slate-300 flex-1">Novos PRO/PRO+ por mês</h2>
                 <div className="flex items-center gap-3 text-xs">
                   <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-brand-400 inline-block" /> Stripe</span>
                   <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-amber-400 inline-block" /> Manual</span>
@@ -229,19 +229,19 @@ export default function ReportsPage({ data }: { data: ReportsData }) {
                 <p className="text-2xl font-bold text-slate-100">{totalSignups.toLocaleString('pt-BR')}</p>
               </div>
               <div className="bg-ink-800 border border-white/6 rounded-2xl p-5">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Conversões PRO (12m)</p>
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Conversões PRO/PRO+ (12m)</p>
                 <p className="text-2xl font-bold text-amber-400">{totalNewPro.toLocaleString('pt-BR')}</p>
               </div>
               <div className="bg-ink-800 border border-white/6 rounded-2xl p-5">
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Taxa de Conversão</p>
                 <p className="text-2xl font-bold text-brand-300">{avgConversion}%</p>
-                <p className="text-xs text-slate-600 mt-1">Free → PRO (média 12m)</p>
+                <p className="text-xs text-slate-600 mt-1">Free → PRO/PRO+ (média 12m)</p>
               </div>
             </div>
 
             <div className="bg-ink-800 border border-white/6 rounded-2xl p-5 flex flex-col gap-4">
               <div className="flex items-center gap-4">
-                <h2 className="text-sm font-semibold text-slate-300 flex-1">Cadastros vs Conversões PRO</h2>
+                <h2 className="text-sm font-semibold text-slate-300 flex-1">Cadastros vs Conversões PRO/PRO+</h2>
                 <div className="flex items-center gap-3 text-xs">
                   <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-slate-400 inline-block" /> Cadastros</span>
                   <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-amber-400 inline-block" /> PRO</span>
@@ -260,7 +260,7 @@ export default function ReportsPage({ data }: { data: ReportsData }) {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-white/6">
-                    {['Mês','Cadastros','Novos PRO','Conversão'].map(h => (
+                    {['Mês','Cadastros','Novos PRO/PRO+','Conversão'].map(h => (
                       <th key={h} className="text-left text-xs text-slate-500 font-medium px-5 py-3">{h}</th>
                     ))}
                   </tr>

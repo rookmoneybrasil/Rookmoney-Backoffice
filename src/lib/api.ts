@@ -76,7 +76,7 @@ export const api = {
   },
 
   // Push broadcast
-  pushBroadcast: (title: string, body: string, audience: 'all' | 'pro', screen?: string) =>
+  pushBroadcast: (title: string, body: string, audience: 'all' | 'pro' | 'pro_plus', screen?: string) =>
     req<{ sent: number; total: number }>('/admin/push-broadcast', {
       method: 'POST', body: JSON.stringify({ title, body, audience, screen }),
     }),
@@ -201,7 +201,7 @@ export interface UsersPage {
 }
 
 export interface SubscriptionEntry {
-  id: string; name: string; email: string; createdAt: string
+  id: string; name: string; email: string; plan: string; createdAt: string
   stripeSubId: string | null
   renewalDate: string | null
   cancelAtPeriodEnd: boolean

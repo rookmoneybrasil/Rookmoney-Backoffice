@@ -1,7 +1,7 @@
 import { GetServerSideProps } from 'next'
 import Head from 'next/head'
 import Link from 'next/link'
-import { Crown, Trash2, Shield, Mail, ArrowUpRight, Search, Bell, CreditCard, Clock, CheckCircle, TrendingDown, AlertTriangle } from 'lucide-react'
+import { Crown, Trash2, Shield, Mail, ArrowUpRight, Search, Bell, CreditCard, Clock, CheckCircle, TrendingDown, AlertTriangle, Sparkles } from 'lucide-react'
 import { Layout } from '../../components/layout'
 import { InfoIcon } from '../../components/tooltip'
 import type { AdminLog, LogsPage } from '../../src/lib/api'
@@ -123,7 +123,11 @@ export default function LogsPage({ data, page, action, search }: { data: LogsPag
                         <span className="text-slate-300 font-medium whitespace-nowrap">{ACTION_LABELS[log.action] ?? log.action}</span>
                       </div>
                     </td>
-                    <td className="px-5 py-3 text-slate-500 text-xs max-w-xs truncate">{log.details}</td>
+                    <td className="px-5 py-3 text-slate-500 text-xs max-w-xs truncate">
+                      {log.details?.includes('PRO+') && <Sparkles className="size-3 text-amber-400 inline mr-1" />}
+                      {log.details?.includes('PRO') && !log.details?.includes('PRO+') && log.action === 'plan_change' && <Crown className="size-3 text-brand-400 inline mr-1" />}
+                      {log.details}
+                    </td>
                     <td className="px-5 py-3 text-slate-600 text-xs whitespace-nowrap">
                       {new Date(log.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     </td>

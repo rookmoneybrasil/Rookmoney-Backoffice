@@ -1,7 +1,7 @@
 import Head from 'next/head'
 import { GetServerSideProps } from 'next'
 import { useState } from 'react'
-import { Bell, Users, Crown, Send } from 'lucide-react'
+import { Bell, Users, Crown, Send, Sparkles } from 'lucide-react'
 import { Layout } from '../components/layout'
 import { api } from '../src/lib/api'
 
@@ -14,7 +14,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
 export default function BroadcastPage() {
   const [title, setTitle]       = useState('')
   const [body, setBody]         = useState('')
-  const [audience, setAudience] = useState<'all' | 'pro'>('all')
+  const [audience, setAudience] = useState<'all' | 'pro' | 'pro_plus'>('all')
   const [screen, setScreen]     = useState('')
   const [loading, setLoading]   = useState(false)
   const [result, setResult]     = useState<{ sent: number } | null>(null)
@@ -22,7 +22,7 @@ export default function BroadcastPage() {
 
   async function send() {
     if (!title.trim() || !body.trim()) return
-    if (!confirm(`Enviar push para todos os usuários ${audience === 'pro' ? 'PRO' : ''} com o app instalado?`)) return
+    if (!confirm(`Enviar push para ${audience === 'pro' ? 'usuários PRO e PRO+' : audience === 'pro_plus' ? 'usuários PRO+' : 'todos os usuários'} com o app instalado?`)) return
     setLoading(true)
     setError('')
     setResult(null)
@@ -62,7 +62,7 @@ export default function BroadcastPage() {
         {/* Audience */}
         <div className="flex flex-col gap-2">
           <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Audiência</label>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <button onClick={() => setAudience('all')}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-medium transition-colors ${
                 audience === 'all'
@@ -72,19 +72,31 @@ export default function BroadcastPage() {
               <Users className="size-4" />
               <div className="text-left">
                 <p>Todos os usuários</p>
-                <p className="text-[10px] font-normal text-slate-600">FREE + PRO com pushToken</p>
+                <p className="text-[10px] font-normal text-slate-600">FREE + PRO + PRO+</p>
               </div>
             </button>
             <button onClick={() => setAudience('pro')}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-medium transition-colors ${
                 audience === 'pro'
-                  ? 'bg-amber-900/40 border-amber-700/50 text-amber-300'
-                  : 'bg-ink-800 border-white/8 text-slate-400 hover:border-amber-700/30'
+                  ? 'bg-blue-900/40 border-blue-700/50 text-blue-300'
+                  : 'bg-ink-800 border-white/8 text-slate-400 hover:border-blue-700/30'
               }`}>
               <Crown className="size-4" />
               <div className="text-left">
-                <p>Somente PRO</p>
-                <p className="text-[10px] font-normal text-slate-600">Usuários no plano PRO</p>
+                <p>Planos pagos</p>
+                <p className="text-[10px] font-normal text-slate-600">PRO + PRO+</p>
+              </div>
+            </button>
+            <button onClick={() => setAudience('pro_plus')}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-medium transition-colors ${
+                audience === 'pro_plus'
+                  ? 'bg-amber-900/40 border-amber-700/50 text-amber-300'
+                  : 'bg-ink-800 border-white/8 text-slate-400 hover:border-amber-700/30'
+              }`}>
+              <Sparkles className="size-4" />
+              <div className="text-left">
+                <p>Somente PRO+</p>
+                <p className="text-[10px] font-normal text-slate-600">Plano PRO+ apenas</p>
               </div>
             </button>
           </div>
@@ -149,7 +161,7 @@ export default function BroadcastPage() {
         <button onClick={send} disabled={loading || !title.trim() || !body.trim()}
           className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold bg-brand-600 hover:bg-brand-500 text-white transition-colors disabled:opacity-50">
           <Send className="size-4" />
-          {loading ? 'Enviando...' : `Enviar para ${audience === 'pro' ? 'usuários PRO' : 'todos'}`}
+          {loading ? 'Enviando...' : `Enviar para ${audience === 'pro' ? 'planos pagos' : audience === 'pro_plus' ? 'usuários PRO+' : 'todos'}`}
         </button>
       </div>
     </Layout>
