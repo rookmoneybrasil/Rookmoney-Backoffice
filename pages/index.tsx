@@ -1,7 +1,7 @@
 import { GetServerSideProps } from 'next'
 import Link from 'next/link'
 import Head from 'next/head'
-import { Bug, Lightbulb, Ticket, TrendingUp, TrendingDown, ArrowUpRight, UserCheck, Clock, Target, Crown, Sparkles } from 'lucide-react'
+import { Bug, Lightbulb, Ticket, TrendingUp, TrendingDown, ArrowUpRight, UserCheck, Clock, Target, Crown, Sparkles, Smartphone } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { Layout } from '../components/layout'
 import { InfoIcon } from '../components/tooltip'
@@ -163,11 +163,6 @@ export default function Dashboard({ stats: s, growth: g, mrr: m }: { stats: Admi
             <h1 className="text-2xl font-bold text-slate-100">Visão geral</h1>
             <p className="text-sm text-slate-500 mt-1">Métricas em tempo real</p>
           </div>
-          <div className="flex items-center gap-2 bg-ink-800 border border-white/6 rounded-xl px-4 py-2" title="Usuários que fizeram alguma ação nos últimos 5 minutos">
-            <span className={`size-2 rounded-full shrink-0 ${s.onlineUsers > 0 ? 'bg-success animate-pulse' : 'bg-slate-600'}`} />
-            <span className="text-sm font-semibold text-slate-200">{s.onlineUsers}</span>
-            <span className="text-xs text-slate-500">online agora</span>
-          </div>
         </div>
 
         {/* Modal de meta de MRR */}
@@ -218,101 +213,137 @@ export default function Dashboard({ stats: s, growth: g, mrr: m }: { stats: Admi
           </div>
         )}
 
-        {/* ═══════════════════ GERAL ═══════════════════ */}
-        <div className="flex flex-col gap-4">
-          <SectionHeader title="Geral" icon={<TrendingUp className="size-4" />} color="text-brand-400" />
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <KPI label="Total usuários" value={s.totalUsers.toLocaleString('pt-BR')} sub={`+${s.newToday} hoje`}
-              tooltip="Total de contas cadastradas (free + PRO + PRO+)."
-              badge={growth !== null && growth !== undefined ? (
-                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 ${
-                  growth >= 0 ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'
-                }`}>
-                  {growth >= 0 ? <TrendingUp className="size-2.5" /> : <TrendingDown className="size-2.5" />}
-                  {Math.abs(growth)}%
-                </span>
-              ) : undefined}
-            />
-            <KPI label="Novos este mês" value={s.newThisMonth.toString()} sub="cadastros"
-              tooltip="Cadastros realizados no mês atual (do dia 1 até hoje)." />
-            <KPI label="Gratuitos" value={s.freeUsers.toLocaleString('pt-BR')} sub={`${100 - s.proRate}% da base`}
-              tooltip="Usuários no plano Free — potenciais conversões." />
-            <KPI label="Transações" value={s.totalTransactions.toLocaleString('pt-BR')} sub={`+${s.transactionsThisMonth} este mês`} color="text-brand-300"
-              tooltip="Total de transações registradas (receitas + despesas)." />
-          </div>
-        </div>
+        {/* ═══════════════════ SEÇÕES 2×2 ═══════════════════ */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        {/* ═══════════════════ PRO ═══════════════════ */}
-        <div className="flex flex-col gap-4">
-          <SectionHeader title="PRO" icon={<Crown className="size-4" />} color="text-amber-400" />
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <KPI label="PRO Ativos" value={s.proTotal.toString()} color="text-amber-400"
-              sub={`Stripe: ${s.proStripe} · Manual: ${s.proManual}`}
-              tooltip="Usuários no plano PRO (R$19,90/mês)." />
-            <KPI label="MRR PRO" value={fmt(s.mrrPro)} color="text-success"
-              sub={`${s.proStripe} assinante${s.proStripe !== 1 ? 's' : ''} Stripe`}
-              tooltip="Receita mensal de assinantes PRO via Stripe. Manuais não contam."
-              badge={mrrTarget > 0 ? (
-                <button onClick={() => { setTargetInput(String(mrrTarget)); setEditingTarget(true) }}
-                  className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-slate-300 transition-colors">
-                  <Target className="size-2.5" /> meta
-                </button>
-              ) : undefined}
-            />
-            <KPI label="Conversões PRO" value={s.convPro.toString()} sub="→ PRO este mês" color="text-amber-400"
-              tooltip="Upgrades para PRO neste mês (Stripe + manual)." />
-            <KPI label="Churn PRO" value={s.churnPro.toString()} sub="PRO → Free este mês"
-              color={s.churnPro > 0 ? 'text-danger' : 'text-slate-300'}
-              tooltip="Downgrades de PRO para Free neste mês." />
+          {/* ── GERAL ──────────────────────────────────────── */}
+          <div className="bg-ink-900/40 border border-white/5 rounded-2xl p-5 flex flex-col gap-4">
+            <SectionHeader title="Geral" icon={<TrendingUp className="size-4" />} color="text-brand-400" />
+            <div className="grid grid-cols-2 gap-3">
+              <KPI label="Total usuários" value={s.totalUsers.toLocaleString('pt-BR')} sub={`+${s.newToday} hoje`}
+                tooltip="Total de contas cadastradas (free + PRO + PRO+)."
+                badge={growth !== null && growth !== undefined ? (
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 ${
+                    growth >= 0 ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'
+                  }`}>
+                    {growth >= 0 ? <TrendingUp className="size-2.5" /> : <TrendingDown className="size-2.5" />}
+                    {Math.abs(growth)}%
+                  </span>
+                ) : undefined}
+              />
+              <KPI label="Novos este mês" value={s.newThisMonth.toString()} sub="cadastros"
+                tooltip="Cadastros realizados no mês atual (do dia 1 até hoje)." />
+              <KPI label="Gratuitos" value={s.freeUsers.toLocaleString('pt-BR')} sub={`${100 - s.proRate}% da base`}
+                tooltip="Usuários no plano Free — potenciais conversões." />
+              <KPI label="Transações" value={s.totalTransactions.toLocaleString('pt-BR')} sub={`+${s.transactionsThisMonth} este mês`} color="text-brand-300"
+                tooltip="Total de transações registradas (receitas + despesas)." />
+            </div>
           </div>
-        </div>
 
-        {/* ═══════════════════ PRO+ ═══════════════════ */}
-        <div className="flex flex-col gap-4">
-          <SectionHeader title="PRO+" icon={<Sparkles className="size-4" />} color="text-violet-400" />
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <KPI label="PRO+ Ativos" value={s.proPlusTotal.toString()} color="text-violet-400"
-              sub={`Stripe: ${s.proPlusStripe} · Manual: ${s.proPlusManual}`}
-              tooltip="Usuários no plano PRO+ (R$34,90/mês)." />
-            <KPI label="MRR PRO+" value={fmt(s.mrrProPlus)} color="text-success"
-              sub={`${s.proPlusStripe} assinante${s.proPlusStripe !== 1 ? 's' : ''} Stripe`}
-              tooltip="Receita mensal de assinantes PRO+ via Stripe. Manuais não contam." />
-            <KPI label="Conversões PRO+" value={s.convProPlus.toString()} sub="→ PRO+ este mês" color="text-violet-400"
-              tooltip="Upgrades para PRO+ neste mês (Stripe + manual)." />
-            <KPI label="Churn PRO+" value={s.churnProPlus.toString()} sub="PRO+ → Free este mês"
-              color={s.churnProPlus > 0 ? 'text-danger' : 'text-slate-300'}
-              tooltip="Downgrades de PRO+ para Free neste mês." />
-          </div>
-        </div>
-
-        {/* ═══════════════════ RECEITA TOTAL ═══════════════════ */}
-        <div className="flex flex-col gap-4">
-          <SectionHeader title="Receita" icon={<Target className="size-4" />} color="text-success" />
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <KPI label="MRR Total" value={fmt(s.mrr)} color="text-success"
-              sub={`PRO: ${fmt(s.mrrPro)} + PRO+: ${fmt(s.mrrProPlus)}`}
-              tooltip="Receita Mensal Recorrente total (só Stripe). ARR = MRR × 12."
-              badge={!mrrTarget ? (
-                <button onClick={() => { setTargetInput(''); setEditingTarget(true) }}
-                  className="text-[10px] text-slate-700 hover:text-slate-500 transition-colors">+ meta</button>
-              ) : undefined}
-            />
-            <KPI label="ARR" value={fmt(s.arr)} color="text-success"
-              sub="MRR × 12" tooltip="Receita Anual Recorrente projetada." />
-            <KPI label="Planos Pagos" value={s.proUsers.toString()} color="text-amber-400"
-              sub={`${s.proRate}% da base · ${s.proUsers - totalManual} Stripe · ${totalManual} manual`}
-              tooltip="Total de usuários PRO + PRO+ ativos." />
-            {totalManual > 0 && (
-              <Link href="/users?plan=PRO_MANUAL" title="PRO ativado pelo backoffice sem Stripe" className="bg-ink-800 border border-amber-700/30 rounded-2xl p-5 flex flex-col gap-2 hover:bg-ink-700/60 transition-colors group">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">PRO Manual</p>
-                  <UserCheck className="size-3.5 text-amber-500/60 group-hover:text-amber-400 transition-colors" />
+          {/* ── PLATAFORMA ─────────────────────────────────── */}
+          <div className="bg-ink-900/40 border border-white/5 rounded-2xl p-5 flex flex-col gap-4">
+            <SectionHeader title="Plataforma" icon={<Smartphone className="size-4" />} color="text-cyan-400" />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-ink-800 border border-white/6 rounded-2xl p-5 flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="size-4 text-green-400"><path d="M17.523 2.234a.752.752 0 00-1.037.234l-1.07 1.838a7.628 7.628 0 00-6.832 0L7.514 2.468a.752.752 0 00-1.271.804l.96 1.648A7.532 7.532 0 004 11.25h16a7.532 7.532 0 00-3.203-6.33l.96-1.648a.752.752 0 00.234-1.037h-.468zM8.5 8.75a.75.75 0 110-1.5.75.75 0 010 1.5zm7 0a.75.75 0 110-1.5.75.75 0 010 1.5zM4 12.75h16v7.5a2.25 2.25 0 01-2.25 2.25H6.25A2.25 2.25 0 014 20.25v-7.5z"/></svg>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Android</p>
                 </div>
-                <p className="text-2xl font-bold text-amber-500">{totalManual}</p>
-                <p className="text-xs text-slate-600">ativados sem Stripe · ver lista →</p>
-              </Link>
-            )}
+                <p className="text-2xl font-bold text-green-400">{s.androidUsers ?? 0}</p>
+                <p className="text-xs text-slate-600">{s.totalUsers > 0 ? Math.round(((s.androidUsers ?? 0) / s.totalUsers) * 100) : 0}% da base</p>
+              </div>
+              <div className="bg-ink-800 border border-white/6 rounded-2xl p-5 flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="size-4 text-slate-300"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Apple</p>
+                </div>
+                <p className="text-2xl font-bold text-slate-200">{s.iosUsers ?? 0}</p>
+                <p className="text-xs text-slate-600">{s.totalUsers > 0 ? Math.round(((s.iosUsers ?? 0) / s.totalUsers) * 100) : 0}% da base</p>
+              </div>
+              <KPI label="Web only" value={(s.webOnlyUsers ?? s.totalUsers).toLocaleString('pt-BR')} color="text-blue-400"
+                sub="sem app instalado"
+                tooltip="Usuários que nunca registraram push token do app mobile." />
+              <KPI label="Online agora" value={s.onlineUsers.toString()} color={s.onlineUsers > 0 ? 'text-success' : 'text-slate-500'}
+                sub="ativos nos últimos 5 min"
+                tooltip="Usuários que fizeram alguma ação nos últimos 5 minutos."
+                badge={s.onlineUsers > 0 ? <span className="size-2 rounded-full bg-success animate-pulse" /> : undefined} />
+            </div>
           </div>
+
+          {/* ── PRO ────────────────────────────────────────── */}
+          <div className="bg-ink-900/40 border border-white/5 rounded-2xl p-5 flex flex-col gap-4">
+            <SectionHeader title="PRO" icon={<Crown className="size-4" />} color="text-amber-400" />
+            <div className="grid grid-cols-2 gap-3">
+              <KPI label="Stripe PRO" value={s.proStripe.toString()} color="text-amber-400"
+                sub={`MRR: ${fmt(s.mrrPro)}`}
+                tooltip="Assinantes PRO pagando via Stripe (R$19,90/mês). Geram MRR."
+                badge={mrrTarget > 0 ? (
+                  <button onClick={() => { setTargetInput(String(mrrTarget)); setEditingTarget(true) }}
+                    className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-slate-300 transition-colors">
+                    <Target className="size-2.5" /> meta
+                  </button>
+                ) : undefined}
+              />
+              <Link href="/users?plan=PRO_MANUAL" className="bg-ink-800 border border-amber-700/20 rounded-2xl p-5 hover:bg-ink-700/60 transition-colors group">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Manual PRO</p>
+                    <InfoIcon text="PRO ativado pelo backoffice sem Stripe — não gera MRR." />
+                  </div>
+                  <UserCheck className="size-3.5 text-amber-500/50 group-hover:text-amber-400 transition-colors" />
+                </div>
+                <p className="text-2xl font-bold text-amber-500/70">{s.proManual}</p>
+                <p className="text-xs text-slate-600 mt-1">sem receita · ver lista →</p>
+              </Link>
+              <KPI label="Conversões PRO" value={s.convPro.toString()} sub="→ PRO este mês" color="text-amber-400"
+                tooltip="Upgrades para PRO neste mês (Stripe + manual)." />
+              <KPI label="Churn PRO" value={s.churnPro.toString()} sub="PRO → Free este mês"
+                color={s.churnPro > 0 ? 'text-danger' : 'text-slate-300'}
+                tooltip="Downgrades de PRO para Free neste mês." />
+            </div>
+          </div>
+
+          {/* ── PRO+ ───────────────────────────────────────── */}
+          <div className="bg-ink-900/40 border border-white/5 rounded-2xl p-5 flex flex-col gap-4">
+            <SectionHeader title="PRO+" icon={<Sparkles className="size-4" />} color="text-violet-400" />
+            <div className="grid grid-cols-2 gap-3">
+              <KPI label="Stripe PRO+" value={s.proPlusStripe.toString()} color="text-violet-400"
+                sub={`MRR: ${fmt(s.mrrProPlus)}`}
+                tooltip="Assinantes PRO+ pagando via Stripe (R$34,90/mês). Geram MRR." />
+              <KPI label="Manual PRO+" value={s.proPlusManual.toString()} color="text-violet-400/60"
+                sub="sem receita"
+                tooltip="PRO+ ativado pelo backoffice sem Stripe — não gera MRR." />
+              <KPI label="Conversões PRO+" value={s.convProPlus.toString()} sub="→ PRO+ este mês" color="text-violet-400"
+                tooltip="Upgrades para PRO+ neste mês (Stripe + manual)." />
+              <KPI label="Churn PRO+" value={s.churnProPlus.toString()} sub="PRO+ → Free este mês"
+                color={s.churnProPlus > 0 ? 'text-danger' : 'text-slate-300'}
+                tooltip="Downgrades de PRO+ para Free neste mês." />
+            </div>
+          </div>
+
+          {/* ── RECEITA ────────────────────────────────────── */}
+          <div className="lg:col-span-2 bg-ink-900/40 border border-white/5 rounded-2xl p-5 flex flex-col gap-4">
+            <SectionHeader title="Receita" icon={<Target className="size-4" />} color="text-success" />
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <KPI label="MRR Total" value={fmt(s.mrr)} color="text-success"
+                sub={`PRO: ${fmt(s.mrrPro)} + PRO+: ${fmt(s.mrrProPlus)}`}
+                tooltip="Receita Mensal Recorrente total (só Stripe). ARR = MRR × 12."
+                badge={!mrrTarget ? (
+                  <button onClick={() => { setTargetInput(''); setEditingTarget(true) }}
+                    className="text-[10px] text-slate-700 hover:text-slate-500 transition-colors">+ meta</button>
+                ) : undefined}
+              />
+              <KPI label="ARR" value={fmt(s.arr)} color="text-success"
+                sub="MRR × 12" tooltip="Receita Anual Recorrente projetada." />
+              <KPI label="Planos Pagos" value={s.proUsers.toString()} color="text-amber-400"
+                sub={`${s.proRate}% da base · ${s.proUsers - totalManual} Stripe · ${totalManual} manual`}
+                tooltip="Total de usuários PRO + PRO+ ativos." />
+              <KPI label="Total PRO Ativos" value={(s.proTotal + s.proPlusTotal).toString()} color="text-amber-400"
+                sub={`PRO: ${s.proTotal} · PRO+: ${s.proPlusTotal}`}
+                tooltip="Soma de todos os usuários em planos pagos." />
+            </div>
+          </div>
+
         </div>
 
         {/* Gráficos de crescimento */}

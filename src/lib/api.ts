@@ -129,6 +129,9 @@ export interface AdminStats {
   recentFeedback: { id: string; type: string; title: string; createdAt: string; user: { name: string } }[]
   recentLogs:     AdminLog[]
   recentUsers:    { id: string; name: string; email: string; plan: string; createdAt: string }[]
+  androidUsers:   number
+  iosUsers:       number
+  webOnlyUsers:   number
 }
 
 export interface GrowthData {
