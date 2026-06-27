@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
-import { LayoutDashboard, Users, MessageSquare, LogOut, ChevronLeft, ScrollText, Crown, Tag, BarChart2, Bell, Settings } from 'lucide-react'
+import { LayoutDashboard, Users, MessageSquare, LogOut, ChevronLeft, ScrollText, Crown, Tag, BarChart2, Bell, Settings, Newspaper } from 'lucide-react'
 import { api } from '../src/lib/api'
 
 interface NavItem { href: string; icon: React.ElementType; label: string; badge?: number }
@@ -23,6 +23,7 @@ export function Layout({ children, openFeedbackCount = 0 }: Props) {
     { href: '/reports',        icon: BarChart2,       label: 'Relatórios'     },
     { href: '/broadcast',      icon: Bell,            label: 'Push Broadcast' },
     { href: '/categories',     icon: Tag,             label: 'Categorias'     },
+    { href: '/newsletter',     icon: Newspaper,       label: 'Newsletter'     },
     { href: '/feedback',       icon: MessageSquare,   label: 'Feedback',      badge: openFeedbackCount || undefined },
     { href: '/logs',           icon: ScrollText,      label: 'Log de ações'   },
     { href: '/settings',       icon: Settings,        label: 'Configurações'  },

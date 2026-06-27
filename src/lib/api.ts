@@ -98,6 +98,16 @@ export const api = {
       method: 'POST', body: JSON.stringify({ userIds, subject, message }),
     }),
 
+  // Newsletter
+  newsletter: (p?: Record<string, string>) => {
+    const qs = p ? '?' + new URLSearchParams(p).toString() : ''
+    return req<NewsletterPage>(`/admin/newsletter${qs}`)
+  },
+  newsletterToggle: (id: string, isActive: boolean) =>
+    req<NewsletterSubscriber>(`/admin/newsletter`, { method: 'PATCH', body: JSON.stringify({ id, isActive }) }),
+  newsletterDelete: (id: string) =>
+    req(`/admin/newsletter`, { method: 'DELETE', body: JSON.stringify({ id }) }),
+
   // Default categories
   categories: () => req<DefaultCategory[]>('/admin/categories'),
   createCategory: (data: { name: string; icon: string; color: string }) =>
@@ -243,4 +253,14 @@ export interface LogsPage {
 
 export interface BroadcastResult {
   sent: number; total: number
+}
+
+export interface NewsletterSubscriber {
+  id: string; email: string; name: string | null; isActive: boolean
+  unsubscribeToken: string; createdAt: string
+}
+
+export interface NewsletterPage {
+  items: NewsletterSubscriber[]; total: number; activeCount: number
+  page: number; totalPages: number
 }
