@@ -464,7 +464,7 @@ export default function Dashboard({ stats: s, growth: g, mrr: m }: { stats: Admi
                       <span className="text-sm shrink-0">{LOG_LABELS[l.action] ?? '•'}</span>
                       <div className="flex-1 min-w-0">
                         <p className="text-[10px] text-slate-400 truncate">{l.details}</p>
-                        <p className="text-[9px] text-slate-700">{new Date(l.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+                        <p className="text-[9px] text-slate-700">{new Date(l.createdAt).toLocaleString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
                       </div>
                     </div>
                   ))}

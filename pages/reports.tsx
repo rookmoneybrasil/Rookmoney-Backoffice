@@ -140,7 +140,7 @@ export default function ReportsPage({ data }: { data: ReportsData }) {
           else if (tab === 'acquisition') downloadCsv('aquisicao.csv', data.acquisition.map(r => [shortMonth(r.month), r.signups, r.newPro, r.conversionRate + '%']), ['Mês','Cadastros','Novos PRO/PRO+','Conversão'])
           else if (tab === 'churn')  downloadCsv('churn.csv', data.churn.map(r => [shortMonth(r.month), r.churn]), ['Mês','Churn'])
           else if (tab === 'cohort') downloadCsv('cohort.csv', (data.cohort ?? []).map(r => [shortMonth(r.cohortMonth), r.total, r.active30d, r.retentionRate + '%']), ['Mês de Cadastro','Usuários','Ativos 30d','Retenção'])
-          else if (tab === 'funnel') downloadCsv('funil.csv', [['Total','Onboarded','Com Transações','Com Metas'],[data.funnel?.totalUsers,data.funnel?.onboarded,data.funnel?.hasTransactions,data.funnel?.hasGoals].map(String)], ['Etapa','Qtd'])
+          else if (tab === 'funnel') downloadCsv('funil.csv', [['Total', data.funnel?.totalUsers ?? 0],['Onboarded', data.funnel?.onboarded ?? 0],['Com Transações', data.funnel?.hasTransactions ?? 0],['Com Metas', data.funnel?.hasGoals ?? 0]], ['Etapa','Qtd'])
           else downloadCsv('uso.csv', data.usage.topUsers.map((u, i) => [i+1, u.name, u.email, u.txCount]), ['#','Nome','Email','Transações'])
         }} className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm bg-ink-700 hover:bg-ink-600 border border-white/8 text-slate-300 transition-colors">
           <Download className="size-4" /> Exportar CSV
