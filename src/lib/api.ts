@@ -108,6 +108,9 @@ export const api = {
   newsletterDelete: (id: string) =>
     req(`/admin/newsletter`, { method: 'DELETE', body: JSON.stringify({ id }) }),
 
+  // Email flows
+  emailFlows: () => req<EmailFlowsData>('/admin/email-flows'),
+
   // Default categories
   categories: () => req<DefaultCategory[]>('/admin/categories'),
   createCategory: (data: { name: string; icon: string; color: string }) =>
@@ -253,6 +256,18 @@ export interface LogsPage {
 
 export interface BroadcastResult {
   sent: number; total: number
+}
+
+export interface EmailFlow {
+  id: string; name: string; trigger: string; description: string
+  sent: number | null; audience: string
+  type: 'transactional' | 'lifecycle' | 'conversion' | 'reengagement' | 'marketing' | 'internal'
+}
+
+export interface EmailFlowsData {
+  flows: EmailFlow[]
+  totalUsers: number; freeUsers: number
+  usersWithActivity: number; usersInactive7d: number
 }
 
 export interface NewsletterSubscriber {
