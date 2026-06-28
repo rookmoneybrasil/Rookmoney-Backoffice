@@ -145,6 +145,10 @@ export interface AdminStats {
   androidUsers:   number
   iosUsers:       number
   webOnlyUsers:   number
+  emailDripStarted:    number
+  emailDripCompleted:  number
+  emailPromoSent:      number
+  emailInactivitySent: number
 }
 
 export interface GrowthData {

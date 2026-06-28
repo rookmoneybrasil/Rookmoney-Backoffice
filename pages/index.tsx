@@ -1,7 +1,7 @@
 import { GetServerSideProps } from 'next'
 import Link from 'next/link'
 import Head from 'next/head'
-import { Bug, Lightbulb, Ticket, TrendingUp, TrendingDown, ArrowUpRight, UserCheck, Clock, Target, Crown, Sparkles, Smartphone } from 'lucide-react'
+import { Bug, Lightbulb, Ticket, TrendingUp, TrendingDown, ArrowUpRight, UserCheck, Clock, Target, Crown, Sparkles, Smartphone, Mail } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { Layout } from '../components/layout'
 import { InfoIcon } from '../components/tooltip'
@@ -341,6 +341,28 @@ export default function Dashboard({ stats: s, growth: g, mrr: m }: { stats: Admi
               <KPI label="Total PRO Ativos" value={(s.proTotal + s.proPlusTotal).toString()} color="text-amber-400"
                 sub={`PRO: ${s.proTotal} · PRO+: ${s.proPlusTotal}`}
                 tooltip="Soma de todos os usuários em planos pagos." />
+            </div>
+          </div>
+
+          {/* ── EMAILS ────────────────────────────────────── */}
+          <div className="lg:col-span-2 bg-ink-900/40 border border-white/5 rounded-2xl p-5 flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <SectionHeader title="Emails" icon={<Mail className="size-4" />} color="text-blue-400" />
+              <Link href="/email-flows" className="text-[10px] text-brand-400 hover:text-brand-300">Ver fluxos →</Link>
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <KPI label="Onboarding Drip" value={s.emailDripStarted?.toString() ?? '0'} color="text-emerald-400"
+                sub={`${s.emailDripCompleted ?? 0} completaram D+7`}
+                tooltip="Usuários que receberam pelo menos 1 email de onboarding (D+1, D+3, D+7)." />
+              <KPI label="Conversão FREE→PRO" value={s.emailPromoSent?.toString() ?? '0'} color="text-purple-400"
+                sub="D+14 / D+30 / D+60"
+                tooltip="Usuários FREE que receberam pelo menos 1 email de conversão." />
+              <KPI label="Reengajamento" value={s.emailInactivitySent?.toString() ?? '0'} color="text-amber-400"
+                sub="Inativos 7d+"
+                tooltip="Usuários que receberam email de reengajamento por inatividade." />
+              <KPI label="Taxa Drip" value={s.totalUsers > 0 ? `${Math.round(((s.emailDripStarted ?? 0) / s.totalUsers) * 100)}%` : '0%'} color="text-blue-400"
+                sub={`${s.emailDripStarted ?? 0} de ${s.totalUsers}`}
+                tooltip="Porcentagem de usuários que receberam onboarding drip." />
             </div>
           </div>
 
