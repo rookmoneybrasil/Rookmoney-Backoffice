@@ -15,6 +15,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
     })
     if (res.status === 401) return { redirect: { destination: '/login', permanent: false } }
     const json = await res.json()
+    if (!json.data) return { redirect: { destination: '/login', permanent: false } }
     return { props: { data: json.data } }
   } catch {
     return { redirect: { destination: '/login', permanent: false } }
