@@ -192,6 +192,7 @@ export interface AdminUser {
   stripeCancelAtPeriodEnd?: boolean; stripeCurrentPeriodEnd?: string | null
   lastActiveAt: string | null
   proPlanExpiresAt: string | null; proPlanReason: string | null; adminNotes: string | null
+  whatsappPhone?: string | null
   loginMethod?: 'google' | 'email'
   hasOnboarded?: boolean
   hasMobileApp?: boolean

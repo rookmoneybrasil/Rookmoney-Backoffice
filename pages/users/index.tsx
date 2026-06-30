@@ -2,7 +2,7 @@ import { GetServerSideProps } from 'next'
 import Link from 'next/link'
 import Head from 'next/head'
 import { useState } from 'react'
-import { Crown, Sparkles, ArrowUpRight, Search, Download, UserCheck, Mail, X, CheckSquare, Square } from 'lucide-react'
+import { Crown, Sparkles, ArrowUpRight, Search, Download, UserCheck, Mail, X, CheckSquare, Square, Phone } from 'lucide-react'
 import { Layout } from '../../components/layout'
 import { InfoIcon } from '../../components/tooltip'
 import { api, type UsersPage, type AdminUser } from '../../src/lib/api'
@@ -132,7 +132,7 @@ export default function UsersPage({ data, search, plan, inactive, page }: { data
         <form className="flex items-center gap-3 flex-wrap">
           <div className="relative flex-1 min-w-48">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-500 pointer-events-none" />
-            <input name="search" defaultValue={search} placeholder="Buscar por nome ou e-mail..."
+            <input name="search" defaultValue={search} placeholder="Buscar por nome, e-mail ou telefone..."
               className="w-full bg-ink-800 border border-white/8 rounded-xl pl-9 pr-4 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-600/60" />
           </div>
           <div className="flex items-center gap-1.5">
@@ -219,7 +219,14 @@ export default function UsersPage({ data, search, plan, inactive, page }: { data
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-slate-500 text-xs">{u.email}</td>
+                  <td className="px-4 py-3 text-xs">
+                    <p className="text-slate-500">{u.email}</p>
+                    {u.whatsappPhone && (
+                      <p className="flex items-center gap-1 text-slate-600 mt-0.5">
+                        <Phone className="size-2.5 shrink-0" />{u.whatsappPhone}
+                      </p>
+                    )}
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5">
                       <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
