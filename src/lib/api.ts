@@ -180,6 +180,12 @@ export interface ReportsData {
   funnel: { totalUsers: number; onboarded: number; hasTransactions: number; hasGoals: number }
 }
 
+export interface ChatUsageData {
+  month: { totalMessages: number; totalCostUsd: number; avgCostPerMessage: number; projectedCostUsd: number }
+  daily: { date: string; web: number; whatsapp: number; costUsd: number }[]
+  topUsers: { userId: string; name: string | null; email: string; plan: string; messages: number; costUsd: number }[]
+}
+
 export interface AppSettings {
   churn_alert_threshold: string
   admin_alert_email:     string
