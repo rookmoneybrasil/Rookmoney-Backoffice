@@ -127,6 +127,7 @@ export default function LogsPage({ data, page, action, search }: { data: LogsPag
                       {log.details?.includes('PRO+') && <Sparkles className="size-3 text-amber-400 inline mr-1" />}
                       {log.details?.includes('PRO') && !log.details?.includes('PRO+') && log.action === 'plan_change' && <Crown className="size-3 text-brand-400 inline mr-1" />}
                       {log.details}
+                      {log.actorEmail && <span className="block text-[10px] text-slate-600 mt-0.5">por {log.actorEmail}</span>}
                     </td>
                     <td className="px-5 py-3 text-slate-600 text-xs whitespace-nowrap">
                       {new Date(log.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}

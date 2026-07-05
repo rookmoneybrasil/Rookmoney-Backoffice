@@ -20,8 +20,18 @@ async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
 
 export const api = {
   // Auth
-  login:  (secret: string) => req<{ token: string }>('/admin/auth', { method: 'POST', body: JSON.stringify({ secret }) }),
-  logout: () => req<void>('/admin/auth/logout', { method: 'POST' }),
+  login:       (secret: string) => req<AdminLoginResult>('/admin/auth', { method: 'POST', body: JSON.stringify({ secret }) }),
+  loginWithPassword: (email: string, password: string) => req<AdminLoginResult>('/admin/auth', { method: 'POST', body: JSON.stringify({ email, password }) }),
+  logout:      () => req<void>('/admin/auth/logout', { method: 'POST' }),
+  me:          () => req<AdminIdentity>('/admin/me'),
+
+  // Admin accounts (superadmin only)
+  admins:       () => req<{ admins: AdminAccount[] }>('/admin/admins'),
+  createAdmin:  (data: { email: string; password: string; name: string; role: string }) =>
+    req<AdminAccount>('/admin/admins', { method: 'POST', body: JSON.stringify(data) }),
+  updateAdmin:  (id: string, data: { role?: string; active?: boolean; password?: string }) =>
+    req<AdminAccount>(`/admin/admins/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deleteAdmin:  (id: string) => req<void>(`/admin/admins/${id}`, { method: 'DELETE' }),
 
   // Stats
   stats: () => req<AdminStats>('/admin/stats'),
@@ -186,6 +196,28 @@ export interface ChatUsageData {
   topUsers: { userId: string; name: string | null; email: string; plan: string; messages: number; costUsd: number }[]
 }
 
+export interface AdminLoginResult {
+  token: string
+  role?: 'support' | 'superadmin'
+  email?: string
+  name?: string
+}
+
+export interface AdminIdentity {
+  email: string
+  role:  'support' | 'superadmin'
+}
+
+export interface AdminAccount {
+  id:          string
+  email:       string
+  name:        string
+  role:        'support' | 'superadmin'
+  active:      boolean
+  lastLoginAt: string | null
+  createdAt:   string
+}
+
 export interface WhatsAppLogItem {
   id:          string
   phone:       string
@@ -250,7 +282,7 @@ export interface AdminUser {
 }
 
 export interface AdminLog {
-  id: string; action: string; targetId: string; details: string; createdAt: string
+  id: string; action: string; targetId: string; details: string; createdAt: string; actorEmail?: string | null
 }
 
 export interface FinancialSummary {

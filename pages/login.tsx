@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import { useRouter } from 'next/router'
-import { Lock, Eye, EyeOff, ShieldAlert } from 'lucide-react'
+import { Lock, Eye, EyeOff, ShieldAlert, Mail, KeyRound } from 'lucide-react'
 import Head from 'next/head'
 import { api } from '../src/lib/api'
 
 export default function LoginPage() {
+  const [mode, setMode]         = useState<'account' | 'breakglass'>('account')
+  const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
+  const [secret, setSecret]     = useState('')
   const [showPwd, setShowPwd]   = useState(false)
   const [error, setError]       = useState('')
   const [loading, setLoading]   = useState(false)
@@ -15,7 +18,8 @@ export default function LoginPage() {
     e.preventDefault()
     setError(''); setLoading(true)
     try {
-      await api.login(password)
+      if (mode === 'account') await api.loginWithPassword(email.trim(), password)
+      else                    await api.login(secret)
       router.push('/')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao entrar')
@@ -41,7 +45,9 @@ export default function LoginPage() {
           <div className="bg-ink-800 border border-white/8 rounded-2xl p-8 flex flex-col gap-6">
             <div>
               <h1 className="text-lg font-bold text-slate-100">Acesso restrito</h1>
-              <p className="text-sm text-slate-500 mt-1">Insira a senha de administrador.</p>
+              <p className="text-sm text-slate-500 mt-1">
+                {mode === 'account' ? 'Entre com seu email e senha de admin.' : 'Acesso de emergência com a senha compartilhada.'}
+              </p>
             </div>
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -51,23 +57,51 @@ export default function LoginPage() {
                   <p className="text-sm text-danger">{error}</p>
                 </div>
               )}
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-500 pointer-events-none" />
-                <input
-                  type={showPwd ? 'text' : 'password'}
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="Senha de administrador"
-                  required autoFocus
-                  className="w-full bg-ink-700 border border-white/8 rounded-xl pl-10 pr-10 py-3 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-600/60 transition-colors"
-                />
-                <button type="button" onClick={() => setShowPwd(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors">
-                  {showPwd ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                </button>
-              </div>
-              <button type="submit" disabled={loading || !password}
+
+              {mode === 'account' ? (
+                <>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-500 pointer-events-none" />
+                    <input
+                      type="email" value={email} onChange={e => setEmail(e.target.value)}
+                      placeholder="Email" required autoFocus autoComplete="username"
+                      className="w-full bg-ink-700 border border-white/8 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-600/60 transition-colors"
+                    />
+                  </div>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-500 pointer-events-none" />
+                    <input
+                      type={showPwd ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
+                      placeholder="Senha" required autoComplete="current-password"
+                      className="w-full bg-ink-700 border border-white/8 rounded-xl pl-10 pr-10 py-3 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-600/60 transition-colors"
+                    />
+                    <button type="button" onClick={() => setShowPwd(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors">
+                      {showPwd ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="relative">
+                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-500 pointer-events-none" />
+                  <input
+                    type={showPwd ? 'text' : 'password'} value={secret} onChange={e => setSecret(e.target.value)}
+                    placeholder="Senha de emergência" required autoFocus
+                    className="w-full bg-ink-700 border border-white/8 rounded-xl pl-10 pr-10 py-3 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-600/60 transition-colors"
+                  />
+                  <button type="button" onClick={() => setShowPwd(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors">
+                    {showPwd ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </button>
+                </div>
+              )}
+
+              <button type="submit" disabled={loading || (mode === 'account' ? (!email || !password) : !secret)}
                 className="w-full bg-brand-600 hover:bg-brand-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-colors text-sm">
                 {loading ? 'Verificando...' : 'Entrar no backoffice'}
+              </button>
+
+              <button type="button" onClick={() => { setMode(m => m === 'account' ? 'breakglass' : 'account'); setError('') }}
+                className="text-xs text-slate-500 hover:text-slate-300 transition-colors text-center">
+                {mode === 'account' ? 'Usar senha de emergência' : '← Voltar para email e senha'}
               </button>
             </form>
           </div>

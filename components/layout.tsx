@@ -3,10 +3,11 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
-import { LayoutDashboard, Users, MessageSquare, LogOut, ChevronLeft, ScrollText, Crown, Tag, BarChart2, Bell, Settings, Newspaper, Mail, Sparkles, Activity, MessageCircle } from 'lucide-react'
-import { api } from '../src/lib/api'
+import { useEffect, useState } from 'react'
+import { LayoutDashboard, Users, MessageSquare, LogOut, ChevronLeft, ScrollText, Crown, Tag, BarChart2, Bell, Settings, Newspaper, Mail, Sparkles, Activity, MessageCircle, ShieldCheck } from 'lucide-react'
+import { api, type AdminIdentity } from '../src/lib/api'
 
-interface NavItem { href: string; icon: React.ElementType; label: string; badge?: number }
+interface NavItem { href: string; icon: React.ElementType; label: string; badge?: number; superadminOnly?: boolean }
 
 interface Props {
   children: React.ReactNode
@@ -15,6 +16,11 @@ interface Props {
 
 export function Layout({ children, openFeedbackCount = 0 }: Props) {
   const router = useRouter()
+  const [me, setMe] = useState<AdminIdentity | null>(null)
+
+  useEffect(() => {
+    api.me().then(setMe).catch(() => {})
+  }, [])
 
   const NAV: NavItem[] = [
     { href: '/',               icon: LayoutDashboard, label: 'Visão geral'    },
@@ -30,8 +36,9 @@ export function Layout({ children, openFeedbackCount = 0 }: Props) {
     { href: '/feedback',       icon: MessageSquare,   label: 'Feedback',      badge: openFeedbackCount || undefined },
     { href: '/logs',           icon: ScrollText,      label: 'Log de ações'   },
     { href: '/cron-status',    icon: Activity,        label: 'Status dos crons' },
+    { href: '/admins',         icon: ShieldCheck,     label: 'Admins',        superadminOnly: true },
     { href: '/settings',       icon: Settings,        label: 'Configurações'  },
-  ]
+  ].filter(item => !item.superadminOnly || me?.role === 'superadmin')
 
   async function handleLogout() {
     try { await api.logout() } catch { /* ignore */ }
@@ -75,6 +82,12 @@ export function Layout({ children, openFeedbackCount = 0 }: Props) {
 
         {/* Footer */}
         <div className="border-t border-white/6 p-3 flex flex-col gap-1">
+          {me && (
+            <div className="px-3 py-2 mb-1">
+              <p className="text-xs text-slate-300 truncate">{me.email}</p>
+              <p className="text-[10px] text-slate-600 uppercase tracking-wider">{me.role === 'superadmin' ? 'Superadmin' : 'Suporte'}</p>
+            </div>
+          )}
           <a href="https://rookmoney.com/dashboard" target="_blank" rel="noreferrer"
             className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-slate-500 hover:text-slate-300 hover:bg-ink-700 transition-colors">
             <ChevronLeft className="size-3.5" />
