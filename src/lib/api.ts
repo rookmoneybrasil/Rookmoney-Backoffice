@@ -186,6 +186,25 @@ export interface ChatUsageData {
   topUsers: { userId: string; name: string | null; email: string; plan: string; messages: number; costUsd: number }[]
 }
 
+export interface CronRun {
+  id:         string
+  name:       string
+  status:     'success' | 'error'
+  startedAt:  string
+  finishedAt: string | null
+  durationMs: number | null
+  error:      string | null
+  meta:       Record<string, unknown> | null
+}
+
+export interface CronRunsData {
+  latest: { name: string; expectedEveryHours: number; lastRun: CronRun | null }[]
+  items:  CronRun[]
+  total:  number
+  page:   number
+  totalPages: number
+}
+
 export interface AppSettings {
   churn_alert_threshold: string
   admin_alert_email:     string
