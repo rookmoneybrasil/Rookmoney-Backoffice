@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
-import { LayoutDashboard, Users, MessageSquare, LogOut, ChevronLeft, ScrollText, Crown, Tag, BarChart2, Bell, Settings, Newspaper, Mail, Sparkles, Activity } from 'lucide-react'
+import { LayoutDashboard, Users, MessageSquare, LogOut, ChevronLeft, ScrollText, Crown, Tag, BarChart2, Bell, Settings, Newspaper, Mail, Sparkles, Activity, MessageCircle } from 'lucide-react'
 import { api } from '../src/lib/api'
 
 interface NavItem { href: string; icon: React.ElementType; label: string; badge?: number }
@@ -21,6 +21,7 @@ export function Layout({ children, openFeedbackCount = 0 }: Props) {
     { href: '/users',          icon: Users,           label: 'Usuários'       },
     { href: '/subscriptions',  icon: Crown,           label: 'Assinaturas PRO' },
     { href: '/rookinho-usage', icon: Sparkles,        label: 'Rookinho IA'    },
+    { href: '/whatsapp-logs',  icon: MessageCircle,   label: 'WhatsApp'       },
     { href: '/reports',        icon: BarChart2,       label: 'Relatórios'     },
     { href: '/broadcast',      icon: Bell,            label: 'Push Broadcast' },
     { href: '/categories',     icon: Tag,             label: 'Categorias'     },

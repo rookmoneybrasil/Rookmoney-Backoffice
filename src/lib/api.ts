@@ -186,6 +186,25 @@ export interface ChatUsageData {
   topUsers: { userId: string; name: string | null; email: string; plan: string; messages: number; costUsd: number }[]
 }
 
+export interface WhatsAppLogItem {
+  id:          string
+  phone:       string
+  direction:   'inbound' | 'outbound'
+  status:      'received' | 'sent' | 'failed'
+  messageType: string
+  error:       string | null
+  createdAt:   string
+  user:        { id: string; name: string; email: string } | null
+}
+
+export interface WhatsAppLogsData {
+  summary: { today: number; failureRate7d: number; activeUsers7d: number }
+  items:   WhatsAppLogItem[]
+  total:   number
+  page:    number
+  totalPages: number
+}
+
 export interface CronRun {
   id:         string
   name:       string
