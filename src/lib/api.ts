@@ -256,6 +256,23 @@ export interface CronRunsData {
   totalPages: number
 }
 
+export interface IntegrityLogItem {
+  id:        string
+  stage:     'precheck' | 'verify'
+  status:    string  // PASS | FAIL | ERROR | BLOCK | UNKNOWN
+  summary:   string
+  createdAt: string
+  user:      { id: string; name: string; email: string } | null
+}
+
+export interface IntegrityLogsData {
+  summary: { total7d: number; pass7d: number; denied7d: number; error7d: number; denyRate7d: number }
+  items:   IntegrityLogItem[]
+  total:   number
+  page:    number
+  totalPages: number
+}
+
 export interface AppSettings {
   churn_alert_threshold: string
   admin_alert_email:     string

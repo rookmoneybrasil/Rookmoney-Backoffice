@@ -4,7 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
-import { LayoutDashboard, Users, MessageSquare, LogOut, ChevronLeft, ScrollText, Crown, Tag, BarChart2, Bell, Settings, Newspaper, Mail, Sparkles, Activity, MessageCircle, ShieldCheck } from 'lucide-react'
+import { LayoutDashboard, Users, MessageSquare, LogOut, ChevronLeft, ScrollText, Crown, Tag, BarChart2, Bell, Settings, Newspaper, Mail, Sparkles, Activity, MessageCircle, ShieldCheck, Fingerprint } from 'lucide-react'
 import { api, type AdminIdentity } from '../src/lib/api'
 
 interface NavItem { href: string; icon: React.ElementType; label: string; badge?: number; superadminOnly?: boolean }
@@ -36,6 +36,7 @@ export function Layout({ children, openFeedbackCount = 0 }: Props) {
     { href: '/feedback',       icon: MessageSquare,   label: 'Feedback',      badge: openFeedbackCount || undefined },
     { href: '/logs',           icon: ScrollText,      label: 'Log de ações'   },
     { href: '/cron-status',    icon: Activity,        label: 'Status dos crons' },
+    { href: '/integrity-logs', icon: Fingerprint,     label: 'Play Integrity' },
     { href: '/admins',         icon: ShieldCheck,     label: 'Admins',        superadminOnly: true },
     { href: '/settings',       icon: Settings,        label: 'Configurações'  },
   ].filter(item => !item.superadminOnly || me?.role === 'superadmin')
