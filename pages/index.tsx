@@ -274,9 +274,9 @@ export default function Dashboard({ stats: s, growth: g, mrr: m }: { stats: Admi
           <div className="bg-ink-900/40 border border-white/5 rounded-2xl p-5 flex flex-col gap-4">
             <SectionHeader title="PRO" icon={<Crown className="size-4" />} color="text-amber-400" />
             <div className="grid grid-cols-2 gap-3">
-              <KPI label="Stripe PRO" value={s.proStripe.toString()} color="text-amber-400"
-                sub={`MRR: ${fmt(s.mrrPro)}`}
-                tooltip="Assinantes PRO pagando via Stripe (R$19,90/mês). Geram MRR."
+              <KPI label="Pagantes PRO" value={(s.proStripe + s.proStore).toString()} color="text-amber-400"
+                sub={`MRR: ${fmt(s.mrrPro)} · ${s.proStripe} Stripe · ${s.proGooglePlay} Play · ${s.proApple} Apple`}
+                tooltip={`Assinantes PRO pagando (R$19,90/mês): ${s.proStripe} Stripe, ${s.proGooglePlay} Google Play, ${s.proApple} Apple. Todos geram MRR. Valor BRUTO — as lojas retêm 15–30%.`}
                 badge={mrrTarget > 0 ? (
                   <button onClick={() => { setTargetInput(String(mrrTarget)); setEditingTarget(true) }}
                     className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-slate-300 transition-colors">
@@ -288,7 +288,7 @@ export default function Dashboard({ stats: s, growth: g, mrr: m }: { stats: Admi
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-1.5">
                     <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Manual PRO</p>
-                    <InfoIcon text="PRO ativado pelo backoffice sem Stripe — não gera MRR." />
+                    <InfoIcon text="PRO de cortesia — ativado pelo backoffice, sem Stripe e sem loja. Não gera MRR." />
                   </div>
                   <UserCheck className="size-3.5 text-amber-500/50 group-hover:text-amber-400 transition-colors" />
                 </div>
@@ -307,12 +307,12 @@ export default function Dashboard({ stats: s, growth: g, mrr: m }: { stats: Admi
           <div className="bg-ink-900/40 border border-white/5 rounded-2xl p-5 flex flex-col gap-4">
             <SectionHeader title="PRO+" icon={<Sparkles className="size-4" />} color="text-violet-400" />
             <div className="grid grid-cols-2 gap-3">
-              <KPI label="Stripe PRO+" value={s.proPlusStripe.toString()} color="text-violet-400"
-                sub={`MRR: ${fmt(s.mrrProPlus)}`}
-                tooltip="Assinantes PRO+ pagando via Stripe (R$34,90/mês). Geram MRR." />
+              <KPI label="Pagantes PRO+" value={(s.proPlusStripe + s.proPlusStore).toString()} color="text-violet-400"
+                sub={`MRR: ${fmt(s.mrrProPlus)} · ${s.proPlusStripe} Stripe · ${s.proPlusGooglePlay} Play · ${s.proPlusApple} Apple`}
+                tooltip={`Assinantes PRO+ pagando (R$34,90/mês): ${s.proPlusStripe} Stripe, ${s.proPlusGooglePlay} Google Play, ${s.proPlusApple} Apple. Todos geram MRR. Valor BRUTO — as lojas retêm 15–30%.`} />
               <KPI label="Manual PRO+" value={s.proPlusManual.toString()} color="text-violet-400/60"
                 sub="sem receita"
-                tooltip="PRO+ ativado pelo backoffice sem Stripe — não gera MRR." />
+                tooltip="PRO+ de cortesia — ativado pelo backoffice, sem Stripe e sem loja. Não gera MRR." />
               <KPI label="Conversões PRO+" value={s.convProPlus.toString()} sub="→ PRO+ este mês" color="text-violet-400"
                 tooltip="Upgrades para PRO+ neste mês (Stripe + manual)." />
               <KPI label="Churn PRO+" value={s.churnProPlus.toString()} sub="PRO+ → Free este mês"

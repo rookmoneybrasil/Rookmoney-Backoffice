@@ -140,9 +140,11 @@ export interface AdminStats {
   totalTransactions: number; transactionsThisMonth: number; totalGoals: number
   // PRO breakdown
   proTotal: number; proStripe: number; proManual: number
+  proGooglePlay: number; proApple: number; proStore: number
   mrrPro: number; convPro: number; churnPro: number
   // PRO+ breakdown
   proPlusTotal: number; proPlusStripe: number; proPlusManual: number
+  proPlusGooglePlay: number; proPlusApple: number; proPlusStore: number
   mrrProPlus: number; convProPlus: number; churnProPlus: number
   // Totals
   mrr: number; arr: number
